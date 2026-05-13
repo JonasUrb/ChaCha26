@@ -1,0 +1,13 @@
+services:
+  zerowaste-bot:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Datenbank bleibt persistent, auch nach Container-Neustart
+      - ./data:/app/data
+    environment:
+      # API-Key sicher über .env-Datei setzen (NICHT hardcoden!)
+      - ACADEMIC_CLOUD_API_KEY=${ACADEMIC_CLOUD_API_KEY}
+      - LLM_MODEL=${LLM_MODEL:-meta-llama-3.1-70b-instruct}
+    restart: unless-stopped
