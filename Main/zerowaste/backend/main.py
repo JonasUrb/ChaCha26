@@ -18,7 +18,7 @@ from backend import database as db
 # ─── Configuration ────────────────────────────────────────────────────────────
 API_KEY  = os.getenv("ACADEMIC_CLOUD_API_KEY", "90718c8494d63cf613bd4a4d62534b3b")
 BASE_URL = "https://chat-ai.academiccloud.de/v1"
-MODEL    = os.getenv("LLM_MODEL", "meta-llama-3.1-70b-instruct")
+MODEL    = os.getenv("LLM_MODEL", "qwen3-30b-a3b-instruct-2507")
 
 client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
