@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    /* ─── Variables & Reset ─────────────────────────────────────────── */
     :root {
       --green-dark:    #4a7c59;
       --green-mid:     #5d9470;
@@ -36,380 +35,158 @@
       height: 100vh;
     }
     .app.sidebar-collapsed {
-  grid-template-columns: 0 1fr;
-}
+      grid-template-columns: 56px 1fr;
+    }
+    .app.sidebar-collapsed .sidebar-logo,
+    .app.sidebar-collapsed .sidebar-nav,
+    .app.sidebar-collapsed .sidebar-inventory,
+    .app.sidebar-collapsed .impact-widget {
+      display: none;
+    }
+    .app.sidebar-collapsed .sidebar-toggle {
+      position: absolute;
+      top: 14px;
+      right: 12px;
+    }
 
-.app.sidebar-collapsed .sidebar {
-  transform: translateX(-100%);
-}
-
-.sidebar {
-  transition: transform 0.25s ease;
-}
-
-.sidebar {
-  background: var(--green-dark);
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-  position: relative;
-  transition: transform 0.25s ease;
-}
-
-.sidebar-toggle {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 10;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.9);
-  font-size: 17px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.18s, transform 0.12s;
-}
-
-.sidebar-toggle:hover {
-  background: rgba(255,255,255,0.22);
-  transform: scale(1.04);
-}
-
-.app.sidebar-collapsed {
-  grid-template-columns: 56px 1fr;
-}
-
-.app.sidebar-collapsed .sidebar {
-  transform: none;
-  padding: 0;
-}
-
-.app.sidebar-collapsed .sidebar-logo,
-.app.sidebar-collapsed .sidebar-nav,
-.app.sidebar-collapsed .sidebar-inventory,
-.app.sidebar-collapsed .impact-widget {
-  display: none;
-}
-
-.app.sidebar-collapsed .sidebar-toggle {
-  position: absolute;
-  top: 14px;
-  right: 12px;
-}    /* ─── Sidebar ───────────────────────────────────────────────────── */
+    /* ─── Sidebar ───────────────────────────────────────────────────── */
     .sidebar {
       background: var(--green-dark);
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-      overflow: hidden;
+      display: flex; flex-direction: column;
+      padding: 0; overflow: hidden;
+      position: relative;
+      transition: transform 0.25s ease;
     }
 
-    .sidebar-logo {
-      padding: 28px 24px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.12);
+    /* Sidebar toggle button */
+    .sidebar-toggle {
+      position: absolute;
+      top: 14px; right: 14px;
+      z-index: 10;
+      width: 32px; height: 32px;
+      border-radius: 10px; border: none;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.9);
+      font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.18s, transform 0.12s;
     }
-    .sidebar-logo .logo-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 4px;
-    }
-  .logo-icon {
-  width: 74px;
-  height: 74px;
-  background: var(--cream);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-}
+    .sidebar-toggle:hover { background: rgba(255,255,255,0.22); transform: scale(1.04); }
 
-.logo-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  transform: translateY(2px);
-  transform: translateX(-1px);
-}
-    .sidebar-logo h1 {
-      font-family: var(--font-display);
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.2;
+    .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .sidebar-logo .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+
+    /* Larger logo icon with image */
+    .logo-icon {
+      width: 74px; height: 74px;
+      background: var(--cream);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
     }
-    .sidebar-logo p {
-      font-size: 12px;
-      color: rgba(255,255,255,0.65);
-      margin-left: 54px;
+    .logo-icon img {
+      width: 100%; height: 100%;
+      object-fit: contain; display: block;
+      transform: translateX(-1px);
     }
 
-    .sidebar-nav {
-      padding: 16px 12px;
-      flex: 1;
-      overflow-y: auto;
-    }
-    .nav-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.45);
-      padding: 0 12px;
-      margin-bottom: 8px;
-      margin-top: 4px;
-    }
-    .nav-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: var(--radius-sm);
-      border: none;
-      background: transparent;
-      color: rgba(255,255,255,0.75);
-      font-family: var(--font-body);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.18s;
-      text-align: left;
-    }
+    .sidebar-logo h1 { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: #fff; line-height: 1.2; }
+    .sidebar-logo p { font-size: 12px; color: rgba(255,255,255,0.65); margin-left: 54px; }
+
+    .sidebar-nav { padding: 16px 12px; flex: 1; overflow-y: auto; }
+    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); padding: 0 12px; margin-bottom: 8px; margin-top: 4px; }
+    .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: none; background: transparent; color: rgba(255,255,255,0.75); font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.18s; text-align: left; }
     .nav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
     .nav-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
     .nav-btn .nav-icon { font-size: 16px; width: 20px; text-align: center; }
 
-    /* Vorratsliste in Sidebar */
-    .sidebar-inventory {
-      padding: 0 12px 16px;
-    }
-    .inventory-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 2px;
-      margin-bottom: 8px;
-    }
-    .inventory-header span {
-      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
-      text-transform: uppercase; color: rgba(255,255,255,0.45);
-    }
-    .add-ingredient-form {
-      display: flex; gap: 6px; margin-bottom: 10px;
-    }
-    .add-ingredient-form input {
-      flex: 1; padding: 7px 10px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 8px;
-      color: #fff; font-size: 13px; font-family: var(--font-body);
-      outline: none;
-    }
+    .sidebar-inventory { padding: 0 12px 16px; }
+    .inventory-header { display: flex; align-items: center; justify-content: space-between; padding: 0 2px; margin-bottom: 8px; }
+    .inventory-header span { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+    .add-ingredient-form { display: flex; gap: 6px; margin-bottom: 10px; }
+    .add-ingredient-form input { flex: 1; padding: 7px 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; color: #fff; font-size: 13px; font-family: var(--font-body); outline: none; }
     .add-ingredient-form input::placeholder { color: rgba(255,255,255,0.4); }
     .add-ingredient-form input:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.18); }
-    .btn-add-small {
-      padding: 7px 10px;
-      background: var(--green-accent);
-      border: none; border-radius: 8px;
-      color: #fff; font-size: 16px; cursor: pointer;
-      transition: background 0.15s;
-    }
+    .btn-add-small { padding: 7px 10px; background: var(--green-accent); border: none; border-radius: 8px; color: #fff; font-size: 16px; cursor: pointer; transition: background 0.15s; }
     .btn-add-small:hover { background: #2d5238; }
 
-    .inventory-list {
-      list-style: none;
-      display: flex; flex-direction: column; gap: 4px;
-      max-height: 220px; overflow-y: auto;
-    }
+    .inventory-list { list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
     .inventory-list::-webkit-scrollbar { width: 4px; }
-    .inventory-list::-webkit-scrollbar-track { background: transparent; }
     .inventory-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-
-    .ingredient-chip {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 5px 10px;
-      background: rgba(255,255,255,0.10);
-      border-radius: 8px;
-      font-size: 13px; color: rgba(255,255,255,0.85);
-      animation: fadeIn 0.2s ease;
-    }
-    .ingredient-chip.expiring-soon {
-      background: rgba(220,150,50,0.25);
-      border-left: 2px solid #e8a030;
-    }
+    .ingredient-chip { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; background: rgba(255,255,255,0.10); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.85); animation: fadeIn 0.2s ease; }
+    .ingredient-chip.expiring-soon { background: rgba(220,150,50,0.25); border-left: 2px solid #e8a030; }
     .chip-text { display: flex; flex-direction: column; gap: 1px; }
     .chip-expiry { font-size: 10px; color: rgba(255,200,100,0.8); }
-    .chip-remove {
-      background: none; border: none; cursor: pointer;
-      color: rgba(255,255,255,0.3); font-size: 14px;
-      line-height: 1; padding: 0 2px;
-      transition: color 0.15s;
-    }
+    .chip-remove { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.3); font-size: 14px; line-height: 1; padding: 0 2px; transition: color 0.15s; }
     .chip-remove:hover { color: rgba(255,120,100,0.9); }
-    .empty-inventory {
-      font-size: 12px; color: rgba(255,255,255,0.35);
-      text-align: center; padding: 12px 0;
-    }
+    .empty-inventory { font-size: 12px; color: rgba(255,255,255,0.35); text-align: center; padding: 12px 0; }
 
-    /* Impact Widget */
-    .impact-widget {
-      margin: 0 12px 20px;
-      background: rgba(255,255,255,0.10);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-    }
-    .impact-widget .impact-title {
-      font-size: 11px; font-weight: 600;
-      color: rgba(255,255,255,0.55);
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 10px;
-    }
-    .impact-row {
-      display: flex; flex-direction: column; gap: 6px;
-    }
-    .impact-item {
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    .impact-widget { margin: 0 12px 20px; background: rgba(255,255,255,0.10); border-radius: var(--radius-sm); padding: 14px 16px; }
+    .impact-widget .impact-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .impact-row { display: flex; flex-direction: column; gap: 6px; }
+    .impact-item { display: flex; align-items: center; justify-content: space-between; }
     .impact-item .label { font-size: 12px; color: rgba(255,255,255,0.65); }
     .impact-item .value { font-family: var(--font-display); font-size: 16px; color: #fff; font-weight: 600; }
     .impact-co2 { font-size: 11px; color: rgba(180,230,190,0.8); margin-top: 4px; }
 
-    /* ─── Main Area ─────────────────────────────────────────────────── */
-    .main {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      background: var(--cream);
-    }
+    /* ─── Main ──────────────────────────────────────────────────────── */
+    .main { display: flex; flex-direction: column; overflow: hidden; background: var(--cream); }
 
-    /* Topbar */
-    .topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 28px;
-      background: var(--cream);
-      border-bottom: 1px solid var(--cream-dark);
-    }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; background: var(--cream); border-bottom: 1px solid var(--cream-dark); }
     .topbar-left { display: flex; align-items: center; gap: 12px; }
-    .bot-avatar {
-      width: 38px;
-      height: 38px;
-      background: var(--cream);
-      /* border: 2px solid var(--green-dark); */
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
 
-    .bot-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      display: block;
-      transform: translateY(-1px);
+    /* Bot avatar with image */
+    .bot-avatar {
+      width: 38px; height: 38px;
+      background: var(--cream);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
     }
+    .bot-avatar img { width: 100%; height: 100%; object-fit: contain; display: block; transform: translateY(-1px); }
+
     .topbar-info h2 { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
     .topbar-info p { font-size: 12px; color: var(--brown-light); }
     .topbar-actions { display: flex; gap: 8px; }
-    .topbar-btn {
-      display: flex; align-items: center; gap: 6px;
-      padding: 7px 14px;
-      border-radius: 20px;
-      border: 1.5px solid var(--cream-dark);
-      background: transparent;
-      color: var(--brown-light);
-      font-size: 13px; font-family: var(--font-body);
-      cursor: pointer; transition: all 0.18s;
-    }
+    .topbar-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--cream-dark); background: transparent; color: var(--brown-light); font-size: 13px; font-family: var(--font-body); cursor: pointer; transition: all 0.18s; }
     .topbar-btn:hover { background: var(--green-light); border-color: var(--green-mid); color: var(--green-accent); }
 
-    /* View Panels */
     .view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
     .view.active { display: flex; }
 
-    /* ─── Chat View ─────────────────────────────────────────────────── */
-    .chat-messages {
-      flex: 1; overflow-y: auto;
-      padding: 24px 28px;
-      display: flex; flex-direction: column; gap: 16px;
-      scroll-behavior: smooth;
-    }
+    /* ─── Chat ──────────────────────────────────────────────────────── */
+    .chat-messages { flex: 1; overflow-y: auto; padding: 24px 28px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
     .chat-messages::-webkit-scrollbar { width: 6px; }
-    .chat-messages::-webkit-scrollbar-track { background: transparent; }
     .chat-messages::-webkit-scrollbar-thumb { background: var(--cream-dark); border-radius: 4px; }
 
     .message { display: flex; gap: 10px; animation: slideUp 0.25s ease; max-width: 75%; }
     .message.user { align-self: flex-end; flex-direction: row-reverse; }
     .message.bot  { align-self: flex-start; }
 
+    /* Bot avatar in chat */
     .msg-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      flex-shrink: 0;
-      margin-top: 2px;
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0; margin-top: 2px;
     }
-
     .message.bot .msg-avatar {
       background: var(--cream);
       overflow: hidden;
     }
-
     .message.user .msg-avatar {
       background: var(--green-light);
-      border: 2px solid rgba(74, 124, 89, 0.35);
+      border: 2px solid rgba(74,124,89,0.35);
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(60,80,50,0.08);
     }
+    .msg-avatar img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
-    .user-avatar img {
-      width: 110%;
-      height: 110%;
-      object-fit: contain;
-      display: block;
-      transform: translateY(-3px);
-      transform: translateX(1px);
-    }
-
-  .msg-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-  }
-  .typing-logo {
-  animation: logoSpin 1.2s linear infinite;
-}
-
-  @keyframes logoSpin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
+    /* Spinning logo while typing */
+    .typing-logo { animation: logoSpin 1.2s linear infinite; }
+    @keyframes logoSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     .msg-body { display: flex; flex-direction: column; gap: 4px; }
-    .msg-bubble {
-      padding: 12px 16px;
-      border-radius: 18px;
-      font-size: 14px; line-height: 1.6;
-    }
+    .msg-bubble { padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.6; }
     .message.bot  .msg-bubble { background: var(--bubble-bot); border-bottom-left-radius: 4px; box-shadow: var(--shadow); }
     .message.user .msg-bubble { background: var(--bubble-user); border-bottom-right-radius: 4px; color: var(--green-accent); }
     .msg-time { font-size: 11px; color: var(--brown-light); padding: 0 4px; }
@@ -424,74 +201,37 @@
     .msg-bubble p:last-child { margin-bottom: 0; }
 
     .suggestion-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-    .suggestion-card {
-      background: var(--green-light);
-      border: 1.5px solid rgba(90,150,100,0.25);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      cursor: pointer; transition: all 0.18s;
-      display: flex; align-items: flex-start; gap: 12px;
-    }
+    .suggestion-card { background: var(--green-light); border: 1.5px solid rgba(90,150,100,0.25); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: all 0.18s; display: flex; align-items: flex-start; gap: 12px; }
     .suggestion-card:hover { background: #d4e8d6; border-color: var(--green-mid); transform: translateX(3px); }
-    .card-num {
-      width: 28px; height: 28px; background: var(--green-dark); color: #fff;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700; flex-shrink: 0;
-    }
+    .card-num { width: 28px; height: 28px; background: var(--green-dark); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
     .card-info { flex: 1; }
     .card-name { font-weight: 600; font-size: 14px; color: var(--green-accent); margin-bottom: 2px; }
     .card-desc { font-size: 12px; color: var(--brown-light); margin-bottom: 4px; }
-    .card-meta { display: flex; gap: 8px; }
+    .card-meta { display: flex; gap: 8px; flex-wrap: wrap; }
     .card-tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: rgba(90,150,100,0.15); color: var(--green-accent); }
-    .diff-einfach  { background: rgba(80,180,80,0.15);  color: #2d6e2d; }
-    .diff-mittel   { background: rgba(200,160,30,0.15); color: #7a5e00; }
-    .diff-aufwändig{ background: rgba(200,80,50,0.12);  color: #8b2020; }
+    .diff-easy     { background: rgba(80,180,80,0.15);  color: #2d6e2d; }
+    .diff-medium   { background: rgba(200,160,30,0.15); color: #7a5e00; }
+    .diff-advanced { background: rgba(200,80,50,0.12);  color: #8b2020; }
 
     .typing-indicator { display: flex; gap: 4px; align-items: center; padding: 12px 16px; }
-    .typing-indicator span {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--green-mid); display: inline-block;
-      animation: bounce 1.2s infinite ease-in-out;
-    }
+    .typing-indicator span { width: 7px; height: 7px; border-radius: 50%; background: var(--green-mid); display: inline-block; animation: bounce 1.2s infinite ease-in-out; }
     .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
     .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
 
-    .chat-input-area {
-      padding: 16px 28px 20px;
-      background: var(--cream);
-      border-top: 1px solid var(--cream-dark);
-    }
+    .chat-input-area { padding: 16px 28px 20px; background: var(--cream); border-top: 1px solid var(--cream-dark); }
     .quick-actions { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-    .quick-btn {
-      padding: 5px 12px; border-radius: 20px;
-      border: 1.5px solid var(--cream-dark);
-      background: transparent; color: var(--brown-light); font-size: 12px;
-      cursor: pointer; transition: all 0.15s; font-family: var(--font-body);
-    }
+    .quick-btn { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--cream-dark); background: transparent; color: var(--brown-light); font-size: 12px; cursor: pointer; transition: all 0.15s; font-family: var(--font-body); }
     .quick-btn:hover { background: var(--green-light); border-color: var(--green-mid); color: var(--green-accent); }
 
     .input-row { display: flex; gap: 10px; align-items: flex-end; }
-    .chat-textarea {
-      flex: 1; padding: 12px 16px; border-radius: 24px;
-      border: 1.5px solid var(--cream-dark); background: #fff;
-      font-size: 14px; font-family: var(--font-body);
-      outline: none; resize: none;
-      min-height: 46px; max-height: 120px;
-      color: var(--brown-text); transition: border-color 0.18s; line-height: 1.5;
-    }
+    .chat-textarea { flex: 1; padding: 12px 16px; border-radius: 24px; border: 1.5px solid var(--cream-dark); background: #fff; font-size: 14px; font-family: var(--font-body); outline: none; resize: none; min-height: 46px; max-height: 120px; color: var(--brown-text); transition: border-color 0.18s; line-height: 1.5; }
     .chat-textarea:focus { border-color: var(--green-mid); }
     .chat-textarea::placeholder { color: #b5a898; }
-    .send-btn {
-      width: 46px; height: 46px; border-radius: 50%; border: none;
-      background: var(--green-dark); color: #fff;
-      font-size: 18px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.18s, transform 0.12s; flex-shrink: 0;
-    }
+    .send-btn { width: 46px; height: 46px; border-radius: 50%; border: none; background: var(--green-dark); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.18s, transform 0.12s; flex-shrink: 0; }
     .send-btn:hover { background: var(--green-accent); transform: scale(1.05); }
     .send-btn:active { transform: scale(0.95); }
 
-    /* ─── Stats View ────────────────────────────────────────────────── */
+    /* ─── Stats ─────────────────────────────────────────────────────── */
     .stats-view { padding: 32px 40px; overflow-y: auto; }
     .stats-view h2 { font-family: var(--font-display); font-size: 28px; color: var(--green-accent); margin-bottom: 6px; }
     .stats-view .subtitle { color: var(--brown-light); margin-bottom: 32px; }
@@ -507,242 +247,119 @@
     .history-item .recipe-date { font-size: 12px; color: var(--brown-light); }
     .stars { color: #e8a030; letter-spacing: 1px; }
 
-    /* ─── Ingredient Popup Modal ────────────────────────────────────── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(30, 45, 35, 0.55);
-      backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.22s ease;
-    }
-    .modal-overlay.open {
-      opacity: 1; pointer-events: all;
-    }
-    .modal {
-      background: #fff;
-      border-radius: 20px;
-      padding: 28px 28px 24px;
-      width: 360px;
-      box-shadow: 0 20px 60px rgba(40,60,40,0.22);
-      transform: translateY(16px) scale(0.97);
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-      position: relative;
-    }
-    .modal-overlay.open .modal {
-      transform: translateY(0) scale(1);
-    }
-
-    .modal-header {
-      display: flex; align-items: flex-start; justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    .modal-title-block {}
-    .modal-pretitle {
-      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-      text-transform: uppercase; color: var(--green-mid);
-      margin-bottom: 3px;
-    }
-    .modal-title {
-      font-family: var(--font-display);
-      font-size: 20px; font-weight: 700;
-      color: var(--brown-text);
-    }
-    .modal-ingredient-name {
-      font-family: var(--font-display);
-      font-size: 20px; font-weight: 700;
-      color: var(--green-accent);
-    }
-    .modal-close {
-      background: var(--cream); border: none; border-radius: 50%;
-      width: 32px; height: 32px; font-size: 16px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--brown-light); transition: all 0.15s; flex-shrink: 0;
-    }
+    /* ─── Modal ─────────────────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(30,45,35,0.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.22s ease; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: #fff; border-radius: 20px; padding: 28px 28px 24px; width: 360px; box-shadow: 0 20px 60px rgba(40,60,40,0.22); transform: translateY(16px) scale(0.97); transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1); position: relative; }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .modal-pretitle { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 3px; }
+    .modal-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--brown-text); }
+    .modal-ingredient-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--green-accent); }
+    .modal-close { background: var(--cream); border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--brown-light); transition: all 0.15s; flex-shrink: 0; }
     .modal-close:hover { background: var(--cream-dark); color: var(--brown-text); }
-
-    /* Menge-Zeile: Zahl + Einheit nebeneinander */
     .modal-field { margin-bottom: 16px; }
-    .modal-field label {
-      display: block; font-size: 12px; font-weight: 600;
-      color: var(--brown-light); margin-bottom: 6px; letter-spacing: 0.03em;
-    }
+    .modal-field label { display: block; font-size: 12px; font-weight: 600; color: var(--brown-light); margin-bottom: 6px; letter-spacing: 0.03em; }
     .modal-field label .required { color: #c0392b; margin-left: 2px; }
-
     .menge-row { display: flex; gap: 8px; }
-    .menge-input {
-      flex: 1; padding: 10px 14px;
-      border: 1.5px solid var(--cream-dark); border-radius: 10px;
-      font-size: 15px; font-family: var(--font-body);
-      color: var(--brown-text); outline: none;
-      transition: border-color 0.18s;
-    }
+    .menge-input { flex: 1; padding: 10px 14px; border: 1.5px solid var(--cream-dark); border-radius: 10px; font-size: 15px; font-family: var(--font-body); color: var(--brown-text); outline: none; transition: border-color 0.18s; }
     .menge-input:focus { border-color: var(--green-mid); }
     .menge-input.error { border-color: #e07060; }
-
-    .einheit-select {
-      width: 90px; padding: 10px 10px;
-      border: 1.5px solid var(--cream-dark); border-radius: 10px;
-      font-size: 14px; font-family: var(--font-body);
-      color: var(--brown-text); background: #fff; outline: none;
-      cursor: pointer; transition: border-color 0.18s;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a6352' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 28px;
-    }
+    .einheit-select { width: 90px; padding: 10px 10px; border: 1.5px solid var(--cream-dark); border-radius: 10px; font-size: 14px; font-family: var(--font-body); color: var(--brown-text); background: #fff; outline: none; cursor: pointer; transition: border-color 0.18s; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a6352' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
     .einheit-select:focus { border-color: var(--green-mid); }
-
-    .date-input {
-      width: 100%; padding: 10px 14px;
-      border: 1.5px solid var(--cream-dark); border-radius: 10px;
-      font-size: 14px; font-family: var(--font-body);
-      color: var(--brown-text); outline: none;
-      transition: border-color 0.18s;
-    }
+    .date-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--cream-dark); border-radius: 10px; font-size: 14px; font-family: var(--font-body); color: var(--brown-text); outline: none; transition: border-color 0.18s; }
     .date-input:focus { border-color: var(--green-mid); }
     .date-input.error { border-color: #e07060; }
-
-    /* Schnell-MHD Buttons */
-    .quick-dates {
-      display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;
-    }
-    .quick-date-btn {
-      padding: 4px 10px; border-radius: 20px;
-      border: 1.5px solid var(--cream-dark);
-      background: transparent; color: var(--brown-light);
-      font-size: 11px; font-family: var(--font-body);
-      cursor: pointer; transition: all 0.15s;
-    }
+    .quick-dates { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .quick-date-btn { padding: 4px 10px; border-radius: 20px; border: 1.5px solid var(--cream-dark); background: transparent; color: var(--brown-light); font-size: 11px; font-family: var(--font-body); cursor: pointer; transition: all 0.15s; }
     .quick-date-btn:hover { background: var(--green-light); border-color: var(--green-mid); color: var(--green-accent); }
-
-    .modal-error {
-      font-size: 12px; color: #c0392b;
-      margin-top: -10px; margin-bottom: 12px;
-      min-height: 16px;
-    }
-
+    .modal-error { font-size: 12px; color: #c0392b; margin-top: -10px; margin-bottom: 12px; min-height: 16px; }
     .modal-actions { display: flex; gap: 8px; margin-top: 8px; }
-    .btn-cancel {
-      flex: 1; padding: 11px;
-      border: 1.5px solid var(--cream-dark); border-radius: 10px;
-      background: transparent; color: var(--brown-light);
-      font-size: 14px; font-family: var(--font-body);
-      cursor: pointer; transition: all 0.15s;
-    }
+    .btn-cancel { flex: 1; padding: 11px; border: 1.5px solid var(--cream-dark); border-radius: 10px; background: transparent; color: var(--brown-light); font-size: 14px; font-family: var(--font-body); cursor: pointer; transition: all 0.15s; }
     .btn-cancel:hover { background: var(--cream); }
-    .btn-confirm {
-      flex: 2; padding: 11px;
-      border: none; border-radius: 10px;
-      background: var(--green-dark); color: #fff;
-      font-size: 14px; font-weight: 600; font-family: var(--font-body);
-      cursor: pointer; transition: background 0.15s;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
+    .btn-confirm { flex: 2; padding: 11px; border: none; border-radius: 10px; background: var(--green-dark); color: #fff; font-size: 14px; font-weight: 600; font-family: var(--font-body); cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .btn-confirm:hover { background: var(--green-accent); }
     .btn-confirm:disabled { background: #aac4b0; cursor: not-allowed; }
 
-    /* ─── Animations ────────────────────────────────────────────────── */
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; } to { opacity: 1; }
-    }
-    @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30%           { transform: translateY(-6px); }
-    }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-6px); }
-      40%, 80% { transform: translateX(6px); }
-    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes bounce  { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+    @keyframes shake   { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
     .shake { animation: shake 0.35s ease; }
   </style>
 </head>
 <body>
 <div class="app">
 
-
   <!-- ─── Sidebar ─────────────────────────────────────────── -->
   <aside class="sidebar">
-    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Sidebar ausblenden">
-  ☰
-    </button>
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Hide sidebar">☰</button>
 
     <div class="sidebar-logo">
       <div class="logo-row">
-      <div class="logo-icon">
-      <img src="/static/logo.png" alt="ZeroWaste Kitchen Bot Logo">
-      </div>
+        <div class="logo-icon">
+          <img src="/static/logo.png" alt="ZeroWaste Kitchen Bot Logo">
+        </div>
         <h1>ZeroWaste<br>Kitchen Bot</h1>
       </div>
-      <p>Weniger wegwerfen, besser kochen.</p>
+      <p>Waste less. Cook better.</p>
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-label">Menü</div>
+      <div class="nav-label">Menu</div>
       <button class="nav-btn active" onclick="switchView('chat', this)">
         <span class="nav-icon">💬</span> Chat
       </button>
       <button class="nav-btn" onclick="switchView('stats', this)">
-        <span class="nav-icon">📊</span> Statistiken
+        <span class="nav-icon">📊</span> Statistics
       </button>
     </nav>
 
     <div class="sidebar-inventory">
       <div class="inventory-header">
-        <span>Mein Vorrat</span>
+        <span>My Pantry</span>
       </div>
       <div class="add-ingredient-form">
-        <input type="text" id="newIngredient" placeholder="Zutat eingeben..."
+        <input type="text" id="newIngredient" placeholder="Add ingredient..."
           onkeydown="if(event.key==='Enter') triggerIngredientPopup()" />
         <button class="btn-add-small" onclick="triggerIngredientPopup()">+</button>
       </div>
       <ul class="inventory-list" id="inventoryList">
-        <li class="empty-inventory">Noch keine Zutaten.</li>
+        <li class="empty-inventory">No ingredients yet.</li>
       </ul>
     </div>
 
     <div class="impact-widget">
-      <div class="impact-title">🌱 Mein Impact</div>
+      <div class="impact-title">🌱 My Impact</div>
       <div class="impact-row">
         <div class="impact-item">
-          <span class="label">Rezepte gekocht</span>
+          <span class="label">Recipes cooked</span>
           <span class="value" id="statsCooked">0</span>
         </div>
         <div class="impact-item">
-          <span class="label">Zutaten gerettet</span>
+          <span class="label">Ingredients saved</span>
           <span class="value" id="statsIngredients">0</span>
         </div>
-        <div class="impact-co2" id="statsCo2">
-          Du hast bereits 0 kg CO₂ gespart! 🌍
-        </div>
+        <div class="impact-co2" id="statsCo2">You've already saved 0 kg of CO₂! 🌍</div>
       </div>
     </div>
-
   </aside>
 
   <!-- ─── Main ────────────────────────────────────────────── -->
   <main class="main">
-
     <div class="topbar">
       <div class="topbar-left">
-      <div class="bot-avatar">
-      <img src="/static/logo.png" alt="Bot Logo">
-    </div>
+        <div class="bot-avatar">
+          <img src="/static/logo.png" alt="Bot Logo">
+        </div>
         <div class="topbar-info">
           <h2>ZeroWaste Kitchen Bot</h2>
-          <p>Dein smarter Küchenassistent</p>
+          <p>Your smart kitchen assistant</p>
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="topbar-btn" onclick="checkExpiring()">⚠️ Ablaufwarnungen</button>
-        <button class="topbar-btn" onclick="refreshStats()">↻ Aktualisieren</button>
+        <button class="topbar-btn" onclick="checkExpiring()">⚠️ Expiry Warnings</button>
+        <button class="topbar-btn" onclick="refreshStats()">↻ Refresh</button>
       </div>
     </div>
 
@@ -751,13 +368,13 @@
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-input-area">
         <div class="quick-actions">
-          <button class="quick-btn" onclick="sendQuick('Was kann ich mit meinem Vorrat kochen?')">🍳 Rezeptideen</button>
-          <button class="quick-btn" onclick="sendQuick('Was wird bald schlecht?')">⚠️ Bald schlecht</button>
-          <button class="quick-btn" onclick="sendQuick('Gib mir einen Nachhaltigkeitstipp')">🌱 SDG-Tipp</button>
-          <button class="quick-btn" onclick="sendQuick('Was kann ich schnell kochen? Unter 20 Minuten.')">⏱️ Schnell kochen</button>
+          <button class="quick-btn" onclick="sendQuick('What can I cook with my pantry?')">🍳 Recipe ideas</button>
+          <button class="quick-btn" onclick="sendQuick('What is expiring soon?')">⚠️ Expiring soon</button>
+          <button class="quick-btn" onclick="sendQuick('Give me a sustainability tip')">🌱 SDG tip</button>
+          <button class="quick-btn" onclick="sendQuick('What can I cook in under 20 minutes?')">⏱️ Quick cook</button>
         </div>
         <div class="input-row">
-          <textarea class="chat-textarea" id="chatInput" placeholder="Schreib eine Nachricht..."
+          <textarea class="chat-textarea" id="chatInput" placeholder="Type a message..."
             rows="1"
             onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessage();}"
             oninput="autoResize(this)"></textarea>
@@ -769,120 +386,92 @@
     <!-- Stats View -->
     <div class="view" id="view-stats">
       <div class="stats-view">
-        <h2>Meine Statistiken</h2>
-        <p class="subtitle">Dein Beitrag gegen Lebensmittelverschwendung – SDG 12</p>
-        <div class="stats-grid" id="statsGrid">
-          <div class="stat-card">
-            <div class="stat-icon">🍳</div>
-            <div class="stat-value" id="bigCooked">0</div>
-            <div class="stat-label">Rezepte gekocht</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🥦</div>
-            <div class="stat-value" id="bigIngredients">0</div>
-            <div class="stat-label">Zutaten im Vorrat</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">🌍</div>
-            <div class="stat-value" id="bigCo2">0</div>
-            <div class="stat-label">kg CO₂ gespart</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">⭐</div>
-            <div class="stat-value" id="bigRating">–</div>
-            <div class="stat-label">Ø Bewertung</div>
-          </div>
+        <h2>My Statistics</h2>
+        <p class="subtitle">Your contribution against food waste — UN SDG 12</p>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">🍳</div><div class="stat-value" id="bigCooked">0</div><div class="stat-label">Recipes cooked</div></div>
+          <div class="stat-card"><div class="stat-icon">🥦</div><div class="stat-value" id="bigIngredients">0</div><div class="stat-label">Ingredients in pantry</div></div>
+          <div class="stat-card"><div class="stat-icon">🌍</div><div class="stat-value" id="bigCo2">0</div><div class="stat-label">kg CO₂ saved</div></div>
+          <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-value" id="bigRating">–</div><div class="stat-label">Avg. rating</div></div>
         </div>
         <div class="history-section">
-          <h3>Kochhistorie</h3>
+          <h3>Cooking History</h3>
           <div class="history-list" id="historyList">
-            <p style="color: var(--brown-light); font-size: 14px;">Noch keine Rezepte gekocht.</p>
+            <p style="color: var(--brown-light); font-size: 14px;">No recipes cooked yet.</p>
           </div>
         </div>
       </div>
     </div>
-
   </main>
 </div>
 
-<!-- ─── Ingredient Popup Modal ──────────────────────────────────── -->
+<!-- ─── Ingredient Modal ─────────────────────────────────────────── -->
 <div class="modal-overlay" id="ingredientModal" onclick="handleOverlayClick(event)">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-
+  <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
-      <div class="modal-title-block">
-        <div class="modal-pretitle">Zutat hinzufügen</div>
-        <div class="modal-title">Details für <span class="modal-ingredient-name" id="modalIngredientName">–</span></div>
+      <div>
+        <div class="modal-pretitle">Add ingredient</div>
+        <div class="modal-title">Details for <span class="modal-ingredient-name" id="modalIngredientName">–</span></div>
       </div>
-      <button class="modal-close" onclick="closeModal()" aria-label="Schließen">✕</button>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
     </div>
 
     <div class="modal-field">
-      <label>Menge <span class="required">*</span></label>
+      <label>Quantity <span class="required">*</span></label>
       <div class="menge-row">
-        <input type="number" class="menge-input" id="modalMenge"
-          placeholder="z.B. 500" min="0.1" step="any"
-          oninput="clearError()" />
+        <input type="number" class="menge-input" id="modalMenge" placeholder="e.g. 500" min="0.1" step="any" oninput="clearError()" />
         <select class="einheit-select" id="modalEinheit">
           <option value="g">g</option>
           <option value="kg">kg</option>
           <option value="ml">ml</option>
           <option value="l">l</option>
-          <option value="Stück">Stück</option>
+          <option value="pcs">pcs</option>
         </select>
       </div>
     </div>
 
     <div class="modal-field">
-      <label>Haltbar bis <span class="required">*</span></label>
-      <input type="date" class="date-input" id="modalHaltbarkeit"
-        oninput="clearError()" />
+      <label>Best before <span class="required">*</span></label>
+      <input type="date" class="date-input" id="modalHaltbarkeit" oninput="clearError()" />
       <div class="quick-dates">
-        <button class="quick-date-btn" onclick="setQuickDate(3)">+3 Tage</button>
-        <button class="quick-date-btn" onclick="setQuickDate(7)">+1 Woche</button>
-        <button class="quick-date-btn" onclick="setQuickDate(14)">+2 Wochen</button>
-        <button class="quick-date-btn" onclick="setQuickDate(30)">+1 Monat</button>
+        <button class="quick-date-btn" onclick="setQuickDate(3)">+3 days</button>
+        <button class="quick-date-btn" onclick="setQuickDate(7)">+1 week</button>
+        <button class="quick-date-btn" onclick="setQuickDate(14)">+2 weeks</button>
+        <button class="quick-date-btn" onclick="setQuickDate(30)">+1 month</button>
       </div>
     </div>
 
     <div class="modal-error" id="modalError"></div>
 
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
-      <button class="btn-confirm" id="btnConfirm" onclick="confirmIngredient()">
-        ✅ Hinzufügen
-      </button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" id="btnConfirm" onclick="confirmIngredient()">✅ Add</button>
     </div>
-
   </div>
 </div>
 
 <script>
-  // ─── Config ─────────────────────────────────────────────────────
   const API = '';
   let conversationHistory = [];
   let pendingSuggestions = null;
-  let pendingIngredientName = '';  // Name der Zutat die gerade im Popup ist
+  let pendingIngredientName = '';
 
-  // ─── Init ────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     loadInventory();
     refreshStats();
-    // Heutiges Datum als Min für Datepicker setzen
     document.getElementById('modalHaltbarkeit').min = new Date().toISOString().split('T')[0];
-    addBotMessage(`## 🌿 Willkommen beim ZeroWaste Kitchen Bot!
+    addBotMessage(`## 🌿 Welcome to the ZeroWaste Kitchen Bot!
 
-Ich helfe dir dabei, Lebensmittel sinnvoll zu verwerten und Food Waste zu reduzieren.
+I'm here to help you use up your ingredients and reduce food waste.
 
-**So geht's:**
-- Füge Zutaten zu deinem Vorrat hinzu (links in der Sidebar)
-- Frag mich nach Rezeptideen oder nutze die Schnellaktionen unten
-- Ich priorisiere immer Zutaten, die bald ablaufen! 🥦
+**Here's how it works:**
+- Add ingredients to your pantry on the left
+- Ask me for recipe ideas or use the quick actions below
+- I always prioritize ingredients that are expiring soon! 🥦
 
-Was möchtest du heute kochen?`);
+What would you like to cook today?`);
   });
 
-  // ─── View Switcher ───────────────────────────────────────────────
   function switchView(view, btn) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -891,28 +480,30 @@ Was möchtest du heute kochen?`);
     if (view === 'stats') loadHistory();
   }
 
+  function toggleSidebar() {
+    const app = document.querySelector('.app');
+    const btn = document.getElementById('sidebarToggle');
+    app.classList.toggle('sidebar-collapsed');
+    btn.title = app.classList.contains('sidebar-collapsed') ? 'Show sidebar' : 'Hide sidebar';
+  }
+
   // ─── Ingredient Popup ────────────────────────────────────────────
   function triggerIngredientPopup() {
     const input = document.getElementById('newIngredient');
     const name = input.value.trim();
     if (!name) {
-      // Kurz schütteln um Aufmerksamkeit zu wecken
       input.classList.add('shake');
       setTimeout(() => input.classList.remove('shake'), 400);
       input.focus();
       return;
     }
     pendingIngredientName = name;
-
-    // Popup befüllen & öffnen
     document.getElementById('modalIngredientName').textContent = name;
     document.getElementById('modalMenge').value = '';
     document.getElementById('modalEinheit').value = 'g';
     document.getElementById('modalHaltbarkeit').value = '';
     document.getElementById('modalError').textContent = '';
     document.getElementById('ingredientModal').classList.add('open');
-
-    // Fokus auf Mengenfeld
     setTimeout(() => document.getElementById('modalMenge').focus(), 80);
   }
 
@@ -922,13 +513,12 @@ Was möchtest du heute kochen?`);
   }
 
   function handleOverlayClick(e) {
-    // Schließt nur wenn man auf den dunklen Hintergrund klickt, nicht auf das Modal selbst
     if (e.target === document.getElementById('ingredientModal')) closeModal();
   }
 
-  function setQuickDate(daysFromNow) {
+  function setQuickDate(days) {
     const d = new Date();
-    d.setDate(d.getDate() + daysFromNow);
+    d.setDate(d.getDate() + days);
     document.getElementById('modalHaltbarkeit').value = d.toISOString().split('T')[0];
     clearError();
   }
@@ -940,73 +530,59 @@ Was möchtest du heute kochen?`);
   }
 
   async function confirmIngredient() {
-    const menge     = parseFloat(document.getElementById('modalMenge').value);
-    const einheit   = document.getElementById('modalEinheit').value;
-    const haltbar   = document.getElementById('modalHaltbarkeit').value;
-    const errorEl   = document.getElementById('modalError');
+    const menge   = parseFloat(document.getElementById('modalMenge').value);
+    const einheit = document.getElementById('modalEinheit').value;
+    const haltbar = document.getElementById('modalHaltbarkeit').value;
+    const errorEl = document.getElementById('modalError');
 
-    // Validierung
     if (!menge || menge <= 0) {
       document.getElementById('modalMenge').classList.add('error');
-      errorEl.textContent = 'Bitte gib eine gültige Menge ein.';
+      errorEl.textContent = 'Please enter a valid quantity.';
       document.getElementById('modalMenge').focus();
       return;
     }
     if (!haltbar) {
       document.getElementById('modalHaltbarkeit').classList.add('error');
-      errorEl.textContent = 'Bitte gib ein Haltbarkeitsdatum an.';
+      errorEl.textContent = 'Please enter a best-before date.';
       document.getElementById('modalHaltbarkeit').focus();
       return;
     }
 
     const btn = document.getElementById('btnConfirm');
     btn.disabled = true;
-    btn.textContent = '⏳ Wird gespeichert…';
+    btn.textContent = '⏳ Saving…';
 
     try {
       const res = await fetch(`${API}/api/inventory/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name:        pendingIngredientName,
-          menge:       menge,
-          einheit:     einheit,
-          haltbar_bis: haltbar
-        })
+        body: JSON.stringify({ name: pendingIngredientName, menge, einheit, haltbar_bis: haltbar })
       });
       const data = await res.json();
-
       if (res.ok) {
         renderInventory(data.inventory);
         document.getElementById('newIngredient').value = '';
         closeModal();
       } else if (res.status === 409) {
-        errorEl.textContent = `"${pendingIngredientName}" ist bereits im Vorrat.`;
+        errorEl.textContent = `"${pendingIngredientName}" is already in your pantry.`;
       } else {
-        errorEl.textContent = data.detail || 'Unbekannter Fehler.';
+        errorEl.textContent = data.detail || 'Unknown error.';
       }
     } catch {
-      // Offline-Fallback: lokal hinzufügen
       const list = document.getElementById('inventoryList');
       const li = document.createElement('li');
       li.className = 'ingredient-chip';
-      li.innerHTML = `
-        <div class="chip-text">
-          <span>${pendingIngredientName} · ${menge} ${einheit}</span>
-          <span class="chip-expiry">⏰ MHD: ${haltbar}</span>
-        </div>
-        <button class="chip-remove" onclick="this.closest('li').remove()">×</button>`;
+      li.innerHTML = `<div class="chip-text"><span>${pendingIngredientName} · ${menge} ${einheit}</span><span class="chip-expiry">⏰ BBD: ${haltbar}</span></div><button class="chip-remove" onclick="this.closest('li').remove()">×</button>`;
       if (list.querySelector('.empty-inventory')) list.innerHTML = '';
       list.appendChild(li);
       document.getElementById('newIngredient').value = '';
       closeModal();
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '✅ Hinzufügen';
+      btn.innerHTML = '✅ Add';
     }
   }
 
-  // Enter im Modal bestätigt auch
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeModal();
     if (e.key === 'Enter' && document.getElementById('ingredientModal').classList.contains('open')) {
@@ -1021,27 +597,21 @@ Was möchtest du heute kochen?`);
       const res = await fetch(`${API}/api/inventory`);
       const data = await res.json();
       renderInventory(data.inventory || []);
-    } catch (e) {
-      console.warn('Backend nicht erreichbar, nutze lokalen Modus.');
-    }
+    } catch { console.warn('Backend unreachable, using local mode.'); }
   }
 
   function renderInventory(items) {
     const list = document.getElementById('inventoryList');
-    if (items.length === 0) {
-      list.innerHTML = '<li class="empty-inventory">Noch keine Zutaten.</li>';
-      return;
-    }
+    if (items.length === 0) { list.innerHTML = '<li class="empty-inventory">No ingredients yet.</li>'; return; }
     list.innerHTML = items.map(item => {
-      const expiring = item.haltbar_bis &&
-        item.haltbar_bis <= new Date(Date.now() + 3*86400000).toISOString().split('T')[0];
+      const expiring = item.haltbar_bis && item.haltbar_bis <= new Date(Date.now() + 3*86400000).toISOString().split('T')[0];
       const mengeStr = item.menge ? ` · ${item.menge} ${item.einheit || ''}`.trim() : '';
       return `<li class="ingredient-chip ${expiring ? 'expiring-soon' : ''}">
         <div class="chip-text">
           <span>${item.name}${mengeStr}</span>
-          ${item.haltbar_bis ? `<span class="chip-expiry">⏰ MHD: ${item.haltbar_bis}</span>` : ''}
+          ${item.haltbar_bis ? `<span class="chip-expiry">⏰ BBD: ${item.haltbar_bis}</span>` : ''}
         </div>
-        <button class="chip-remove" onclick="removeIngredient('${item.name}')" title="Entfernen">×</button>
+        <button class="chip-remove" onclick="removeIngredient('${item.name}')" title="Remove">×</button>
       </li>`;
     }).join('');
     document.getElementById('statsIngredients').textContent = items.length;
@@ -1050,11 +620,7 @@ Was möchtest du heute kochen?`);
 
   async function removeIngredient(name) {
     try {
-      const res = await fetch(`${API}/api/inventory/remove`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-      });
+      const res = await fetch(`${API}/api/inventory/remove`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
       const data = await res.json();
       if (res.ok) renderInventory(data.inventory);
     } catch { console.warn('Offline'); }
@@ -1065,14 +631,12 @@ Was möchtest du heute kochen?`);
       const res = await fetch(`${API}/api/inventory/expiring?days=3`);
       const data = await res.json();
       if (data.expiring && data.expiring.length > 0) {
-        const names = data.expiring.map(i => `**${i.name}** (MHD: ${i.haltbar_bis})`).join(', ');
-        addBotMessage(`⚠️ **Folgende Zutaten laufen bald ab:**\n\n${names}\n\nSoll ich dir Rezepte vorschlagen, die diese Zutaten verwenden?`);
+        const names = data.expiring.map(i => `**${i.name}** (BBD: ${i.haltbar_bis})`).join(', ');
+        addBotMessage(`⚠️ **The following ingredients are expiring soon:**\n\n${names}\n\nShould I suggest recipes that use these up?`);
       } else {
-        addBotMessage('✅ Super! Alle deine Zutaten sind noch frisch. Kein Handlungsbedarf.');
+        addBotMessage('✅ Great! All your ingredients are still fresh. No action needed.');
       }
-    } catch {
-      addBotMessage('⚠️ Konnte Ablaufwarnungen nicht laden (Backend nicht erreichbar).');
-    }
+    } catch { addBotMessage('⚠️ Could not load expiry warnings (backend unreachable).'); }
   }
 
   // ─── Stats ───────────────────────────────────────────────────────
@@ -1084,7 +648,7 @@ Was möchtest du heute kochen?`);
       document.getElementById('bigCooked').textContent = data.rezepte_gekocht || 0;
       document.getElementById('bigCo2').textContent = data.co2_gespart_kg || 0;
       document.getElementById('bigRating').textContent = data.durchschnittsbewertung || '–';
-      document.getElementById('statsCo2').textContent = `Du hast bereits ${data.co2_gespart_kg || 0} kg CO₂ gespart! 🌍`;
+      document.getElementById('statsCo2').textContent = `You've already saved ${data.co2_gespart_kg || 0} kg of CO₂! 🌍`;
     } catch { /* offline */ }
   }
 
@@ -1093,16 +657,10 @@ Was möchtest du heute kochen?`);
       const res = await fetch(`${API}/api/history`);
       const data = await res.json();
       const list = document.getElementById('historyList');
-      if (!data.history || data.history.length === 0) {
-        list.innerHTML = '<p style="color: var(--brown-light); font-size: 14px;">Noch keine Rezepte gekocht.</p>';
-        return;
-      }
+      if (!data.history || data.history.length === 0) { list.innerHTML = '<p style="color: var(--brown-light); font-size: 14px;">No recipes cooked yet.</p>'; return; }
       list.innerHTML = data.history.map(h => `
         <div class="history-item">
-          <div>
-            <div class="recipe-name">${h.rezept_name}</div>
-            <div class="recipe-date">${h.gekocht_am}</div>
-          </div>
+          <div><div class="recipe-name">${h.rezept_name}</div><div class="recipe-date">${h.gekocht_am}</div></div>
           <div class="stars">${h.bewertung ? '⭐'.repeat(h.bewertung) : '–'}</div>
         </div>`).join('');
     } catch { /* offline */ }
@@ -1110,13 +668,13 @@ Was möchtest du heute kochen?`);
 
   // ─── Chat ────────────────────────────────────────────────────────
   function addUserMessage(text) {
-    const now = new Date().toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' });
+    const now = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
     const div = document.createElement('div');
     div.className = 'message user';
     div.innerHTML = `
-    <div class="msg-avatar user-avatar">
-      <img src="/static/logo2.png" alt="User Logo">
-    </div>
+      <div class="msg-avatar">
+        <img src="/static/logo2.png" alt="User">
+      </div>
       <div class="msg-body">
         <div class="msg-bubble">${escapeHtml(text)}</div>
         <div class="msg-time">${now}</div>
@@ -1126,7 +684,7 @@ Was möchtest du heute kochen?`);
   }
 
   function addBotMessage(markdown, withCards = null) {
-    const now = new Date().toLocaleTimeString('de', { hour: '2-digit', minute: '2-digit' });
+    const now = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
     const div = document.createElement('div');
     div.className = 'message bot';
     let cardsHtml = '';
@@ -1136,23 +694,23 @@ Was möchtest du heute kochen?`);
           <div class="card-num">${i + 1}</div>
           <div class="card-info">
             <div class="card-name">${s.name}</div>
-            <div class="card-desc">${s.beschreibung}</div>
+            <div class="card-desc">${s.description || s.beschreibung || ''}</div>
             <div class="card-meta">
-              <span class="card-tag diff-${s.schwierigkeit}">${s.schwierigkeit}</span>
-              <span class="card-tag">⏱ ${s.dauer_min || '?'} Min</span>
-              <span class="card-tag">🥦 ${(s.zutaten_genutzt || []).length} Zutaten</span>
+              <span class="card-tag diff-${s.difficulty || s.schwierigkeit}">${s.difficulty || s.schwierigkeit}</span>
+              <span class="card-tag">⏱ ${s.duration_min || s.dauer_min || '?'} min</span>
+              <span class="card-tag">🥦 ${(s.ingredients_used || s.zutaten_genutzt || []).length} ingredients</span>
             </div>
           </div>
         </div>`).join('')}</div>`;
     }
-  div.innerHTML = `
-        <div class="msg-avatar">
-          <img src="/static/logo.png" alt="Bot Logo">
-        </div>
-        <div class="msg-body">
-          <div class="msg-bubble">${renderMarkdown(markdown)}${cardsHtml}</div>
-          <div class="msg-time">${now}</div>
-        </div>`;
+    div.innerHTML = `
+      <div class="msg-avatar">
+        <img src="/static/logo.png" alt="Bot">
+      </div>
+      <div class="msg-body">
+        <div class="msg-bubble">${renderMarkdown(markdown)}${cardsHtml}</div>
+        <div class="msg-time">${now}</div>
+      </div>`;
     document.getElementById('chatMessages').appendChild(div);
     scrollToBottom();
   }
@@ -1160,9 +718,9 @@ Was möchtest du heute kochen?`);
   function showTyping() {
     const div = document.createElement('div');
     div.className = 'message bot'; div.id = 'typing';
-div.innerHTML = `
+    div.innerHTML = `
       <div class="msg-avatar">
-        <img class="typing-logo" src="/static/logo.png" alt="Bot lädt">
+        <img class="typing-logo" src="/static/logo.png" alt="Bot is thinking">
       </div>
       <div class="msg-body">
         <div class="msg-bubble">
@@ -1172,10 +730,7 @@ div.innerHTML = `
     document.getElementById('chatMessages').appendChild(div);
     scrollToBottom();
   }
-  function hideTyping() {
-    const el = document.getElementById('typing');
-    if (el) el.remove();
-  }
+  function hideTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
 
   async function sendMessage() {
     const input = document.getElementById('chatInput');
@@ -1186,36 +741,34 @@ div.innerHTML = `
     if (pendingSuggestions) {
       const num = parseInt(text);
       if (num >= 1 && num <= 3) { addUserMessage(text); await selectRecipe(num - 1); return; }
-      if (['abbrechen','nein','cancel'].includes(text.toLowerCase())) {
+      if (['cancel','no','nope'].includes(text.toLowerCase())) {
         addUserMessage(text); pendingSuggestions = null;
-        addBotMessage('Okay! Was möchtest du stattdessen tun?'); return;
+        addBotMessage('Sure! What would you like to do instead?'); return;
       }
     }
 
     addUserMessage(text);
     showTyping();
 
-    const isRecipeRequest = /rezept|kochen|essen|gericht|hunger|lust auf|was kann|mahlzeit|mittag|abend|frühstück|schnell/i.test(text);
+    const isRecipeRequest = /recipe|cook|eat|dish|hungry|feel like|what can|meal|lunch|dinner|breakfast|quick|fast|make/i.test(text);
 
     try {
       if (isRecipeRequest) {
         const res = await fetch(`${API}/api/chat/suggest`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text, history: conversationHistory })
         });
         const data = await res.json();
         hideTyping();
         if (data.suggestions && data.suggestions.length > 0) {
           pendingSuggestions = data.suggestions;
-          addBotMessage('Ich habe **3 Rezeptideen** für deinen Vorrat gefunden!\n\nWelche möchtest du genauer sehen? Klick einfach auf eine Karte oder tippe 1, 2 oder 3.', data.suggestions);
+          addBotMessage('I found **3 recipe ideas** for your pantry!\n\nClick a card or type 1, 2 or 3 to see the full recipe.', data.suggestions);
         } else {
-          addBotMessage('Ich konnte keine passenden Rezepte finden. Füge mehr Zutaten zum Vorrat hinzu!');
+          addBotMessage("I couldn't find matching recipes. Try adding more ingredients to your pantry!");
         }
       } else {
         const res = await fetch(`${API}/api/chat/message`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text, history: conversationHistory })
         });
         const data = await res.json();
@@ -1224,9 +777,9 @@ div.innerHTML = `
         conversationHistory.push({ role: 'user', content: text });
         conversationHistory.push({ role: 'assistant', content: data.reply });
       }
-    } catch (e) {
+    } catch {
       hideTyping();
-      addBotMessage('⚠️ Verbindung zum Backend nicht möglich. Stelle sicher dass der Server läuft (`docker compose up`).');
+      addBotMessage('⚠️ Could not connect to the backend. Make sure the server is running (`uvicorn backend.main:app --reload`).');
     }
     refreshStats();
   }
@@ -1235,57 +788,31 @@ div.innerHTML = `
     if (!pendingSuggestions) return;
     const recipe = pendingSuggestions[index];
     pendingSuggestions = null;
-    addUserMessage(`Ich möchte: ${recipe.name}`);
+    addUserMessage(`I'd like to make: ${recipe.name}`);
     showTyping();
     try {
       const res = await fetch(`${API}/api/chat/recipe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recipe_name: recipe.name, history: conversationHistory })
       });
       const data = await res.json();
       hideTyping();
       addBotMessage(data.recipe);
-      conversationHistory.push({ role: 'user', content: `Rezept für ${recipe.name}` });
+      conversationHistory.push({ role: 'user', content: `Recipe for ${recipe.name}` });
       conversationHistory.push({ role: 'assistant', content: data.recipe });
-      setTimeout(() => addBotMessage('Hat das Rezept geschmeckt? Bewerte es mit 1–5 Sternen (einfach die Zahl eintippen) ⭐'), 1500);
+      setTimeout(() => addBotMessage('Did you enjoy the recipe? Rate it with 1–5 stars — just type the number! ⭐'), 1500);
     } catch {
       hideTyping();
-      addBotMessage('⚠️ Konnte das Rezept nicht laden.');
+      addBotMessage('⚠️ Could not load the recipe.');
     }
     refreshStats();
   }
 
-  function sendQuick(text) {
-    document.getElementById('chatInput').value = text;
-    sendMessage();
-  }
-function toggleSidebar() {
-  const app = document.querySelector('.app');
-  const btn = document.getElementById('sidebarToggle');
+  function sendQuick(text) { document.getElementById('chatInput').value = text; sendMessage(); }
 
-  app.classList.toggle('sidebar-collapsed');
-
-  if (app.classList.contains('sidebar-collapsed')) {
-    btn.innerHTML = '☰';
-    btn.title = 'Sidebar einblenden';
-  } else {
-    btn.innerHTML = '☰';
-    btn.title = 'Sidebar ausblenden';
-  }
-}
-  // ─── Helpers ─────────────────────────────────────────────────────
-  function scrollToBottom() {
-    const el = document.getElementById('chatMessages');
-    setTimeout(() => el.scrollTop = el.scrollHeight, 50);
-  }
-  function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-  }
-  function escapeHtml(t) {
-    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+  function scrollToBottom() { const el = document.getElementById('chatMessages'); setTimeout(() => el.scrollTop = el.scrollHeight, 50); }
+  function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+  function escapeHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function renderMarkdown(text) {
     return text
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
