@@ -27,46 +27,31 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; background: var(--cream); font-family: var(--font-body); color: var(--brown-text); }
 
-    /* ─── Layout ────────────────────────────────────────────────────── */
     .app {
       display: grid;
       grid-template-columns: 280px 1fr;
       grid-template-rows: 100vh;
       height: 100vh;
     }
-    .app.sidebar-collapsed {
-      grid-template-columns: 56px 1fr;
-    }
+    .app.sidebar-collapsed { grid-template-columns: 56px 1fr; }
     .app.sidebar-collapsed .sidebar-logo,
     .app.sidebar-collapsed .sidebar-nav,
     .app.sidebar-collapsed .sidebar-inventory,
-    .app.sidebar-collapsed .impact-widget {
-      display: none;
-    }
-    .app.sidebar-collapsed .sidebar-toggle {
-      position: absolute;
-      top: 14px;
-      right: 12px;
-    }
+    .app.sidebar-collapsed .sidebar-allergies,
+    .app.sidebar-collapsed .impact-widget { display: none; }
+    .app.sidebar-collapsed .sidebar-toggle { position: absolute; top: 14px; right: 12px; }
 
     /* ─── Sidebar ───────────────────────────────────────────────────── */
     .sidebar {
       background: var(--green-dark);
       display: flex; flex-direction: column;
       padding: 0; overflow: hidden;
-      position: relative;
-      transition: transform 0.25s ease;
+      position: relative; transition: transform 0.25s ease;
     }
-
-    /* Sidebar toggle button */
     .sidebar-toggle {
-      position: absolute;
-      top: 14px; right: 14px;
-      z-index: 10;
-      width: 32px; height: 32px;
-      border-radius: 10px; border: none;
-      background: rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.9);
+      position: absolute; top: 14px; right: 14px; z-index: 10;
+      width: 32px; height: 32px; border-radius: 10px; border: none;
+      background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9);
       font-size: 17px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.18s, transform 0.12s;
@@ -75,32 +60,27 @@
 
     .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.12); }
     .sidebar-logo .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
-
-    /* Larger logo icon with image */
-    .logo-icon {
-      width: 74px; height: 74px;
-      background: var(--cream);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; flex-shrink: 0;
-    }
-    .logo-icon img {
-      width: 100%; height: 100%;
-      object-fit: contain; display: block;
-      transform: translateX(-1px);
-    }
-
+    .logo-icon { width: 74px; height: 74px; background: var(--cream); border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .logo-icon img { width: 100%; height: 100%; object-fit: contain; display: block; transform: translateX(-1px); }
     .sidebar-logo h1 { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: #fff; line-height: 1.2; }
     .sidebar-logo p { font-size: 12px; color: rgba(255,255,255,0.65); margin-left: 54px; }
 
-    .sidebar-nav { padding: 16px 12px; flex: 1; overflow-y: auto; }
+    .sidebar-nav { padding: 16px 12px 8px; }
     .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); padding: 0 12px; margin-bottom: 8px; margin-top: 4px; }
     .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: none; background: transparent; color: rgba(255,255,255,0.75); font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.18s; text-align: left; }
     .nav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
     .nav-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
     .nav-btn .nav-icon { font-size: 16px; width: 20px; text-align: center; }
 
-    .sidebar-inventory { padding: 0 12px 16px; }
+    /* Scrollable middle section */
+    .sidebar-scroll {
+      flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .sidebar-scroll::-webkit-scrollbar { width: 3px; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+    /* ─── Pantry ────────────────────────────────────────────────────── */
+    .sidebar-inventory { padding: 0 12px 12px; }
     .inventory-header { display: flex; align-items: center; justify-content: space-between; padding: 0 2px; margin-bottom: 8px; }
     .inventory-header span { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
     .add-ingredient-form { display: flex; gap: 6px; margin-bottom: 10px; }
@@ -110,8 +90,8 @@
     .btn-add-small { padding: 7px 10px; background: var(--green-accent); border: none; border-radius: 8px; color: #fff; font-size: 16px; cursor: pointer; transition: background 0.15s; }
     .btn-add-small:hover { background: #2d5238; }
 
-    .inventory-list { list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
-    .inventory-list::-webkit-scrollbar { width: 4px; }
+    .inventory-list { list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
+    .inventory-list::-webkit-scrollbar { width: 3px; }
     .inventory-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
     .ingredient-chip { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; background: rgba(255,255,255,0.10); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.85); animation: fadeIn 0.2s ease; }
     .ingredient-chip.expiring-soon { background: rgba(220,150,50,0.25); border-left: 2px solid #e8a030; }
@@ -121,6 +101,89 @@
     .chip-remove:hover { color: rgba(255,120,100,0.9); }
     .empty-inventory { font-size: 12px; color: rgba(255,255,255,0.35); text-align: center; padding: 12px 0; }
 
+    /* ─── Allergies Panel ───────────────────────────────────────────── */
+    .sidebar-allergies {
+      padding: 0 12px 14px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin-top: 4px;
+    }
+    .allergies-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 2px 8px;
+    }
+    .allergies-header span {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.45);
+    }
+
+    /* Common allergen checkboxes */
+    .allergy-chips {
+      display: flex; flex-wrap: wrap; gap: 5px;
+      margin-bottom: 8px;
+    }
+    .allergy-chip-btn {
+      padding: 3px 9px; border-radius: 20px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: transparent; color: rgba(255,255,255,0.55);
+      font-size: 11px; font-family: var(--font-body);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .allergy-chip-btn:hover {
+      border-color: rgba(255,200,100,0.5);
+      color: rgba(255,220,120,0.9);
+    }
+    .allergy-chip-btn.active {
+      background: rgba(220,150,50,0.3);
+      border-color: #e8a030;
+      color: #ffd580;
+    }
+
+    /* Custom allergy input */
+    .add-allergy-form { display: flex; gap: 6px; }
+    .add-allergy-form input {
+      flex: 1; padding: 6px 10px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #fff; font-size: 12px; font-family: var(--font-body);
+      outline: none;
+    }
+    .add-allergy-form input::placeholder { color: rgba(255,255,255,0.35); }
+    .add-allergy-form input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.15); }
+    .btn-add-allergy {
+      padding: 6px 10px;
+      background: rgba(220,150,50,0.35);
+      border: none; border-radius: 8px;
+      color: #ffd580; font-size: 14px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-add-allergy:hover { background: rgba(220,150,50,0.55); }
+
+    /* Active allergy tags list */
+    .allergy-list {
+      list-style: none; display: flex; flex-direction: column; gap: 3px;
+      margin-top: 7px; max-height: 90px; overflow-y: auto;
+    }
+    .allergy-list::-webkit-scrollbar { width: 3px; }
+    .allergy-list::-webkit-scrollbar-thumb { background: rgba(255,200,100,0.2); border-radius: 4px; }
+    .allergy-tag {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 10px;
+      background: rgba(220,150,50,0.2);
+      border-left: 2px solid #e8a030;
+      border-radius: 6px;
+      font-size: 12px; color: #ffd580;
+      animation: fadeIn 0.2s ease;
+    }
+    .allergy-tag-remove {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,200,100,0.4); font-size: 13px;
+      line-height: 1; padding: 0 2px; transition: color 0.15s;
+    }
+    .allergy-tag-remove:hover { color: rgba(255,120,100,0.9); }
+    .empty-allergies { font-size: 11px; color: rgba(255,255,255,0.3); text-align: center; padding: 6px 0; }
+
+    /* ─── Impact Widget ──────────────────────────────────────────────── */
     .impact-widget { margin: 0 12px 20px; background: rgba(255,255,255,0.10); border-radius: var(--radius-sm); padding: 14px 16px; }
     .impact-widget .impact-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
     .impact-row { display: flex; flex-direction: column; gap: 6px; }
@@ -131,20 +194,10 @@
 
     /* ─── Main ──────────────────────────────────────────────────────── */
     .main { display: flex; flex-direction: column; overflow: hidden; background: var(--cream); }
-
     .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; background: var(--cream); border-bottom: 1px solid var(--cream-dark); }
     .topbar-left { display: flex; align-items: center; gap: 12px; }
-
-    /* Bot avatar with image */
-    .bot-avatar {
-      width: 38px; height: 38px;
-      background: var(--cream);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; flex-shrink: 0;
-    }
+    .bot-avatar { width: 38px; height: 38px; background: var(--cream); border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
     .bot-avatar img { width: 100%; height: 100%; object-fit: contain; display: block; transform: translateY(-1px); }
-
     .topbar-info h2 { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
     .topbar-info p { font-size: 12px; color: var(--brown-light); }
     .topbar-actions { display: flex; gap: 8px; }
@@ -162,26 +215,10 @@
     .message { display: flex; gap: 10px; animation: slideUp 0.25s ease; max-width: 75%; }
     .message.user { align-self: flex-end; flex-direction: row-reverse; }
     .message.bot  { align-self: flex-start; }
-
-    /* Bot avatar in chat */
-    .msg-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 15px; flex-shrink: 0; margin-top: 2px;
-    }
-    .message.bot .msg-avatar {
-      background: var(--cream);
-      overflow: hidden;
-    }
-    .message.user .msg-avatar {
-      background: var(--green-light);
-      border: 2px solid rgba(74,124,89,0.35);
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(60,80,50,0.08);
-    }
+    .msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
+    .message.bot .msg-avatar { background: var(--cream); overflow: hidden; }
+    .message.user .msg-avatar { background: var(--green-light); border: 2px solid rgba(74,124,89,0.35); overflow: hidden; box-shadow: 0 2px 8px rgba(60,80,50,0.08); }
     .msg-avatar img { width: 100%; height: 100%; object-fit: contain; display: block; }
-
-    /* Spinning logo while typing */
     .typing-logo { animation: logoSpin 1.2s linear infinite; }
     @keyframes logoSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -191,7 +228,6 @@
     .message.user .msg-bubble { background: var(--bubble-user); border-bottom-right-radius: 4px; color: var(--green-accent); }
     .msg-time { font-size: 11px; color: var(--brown-light); padding: 0 4px; }
     .message.user .msg-time { text-align: right; }
-
     .msg-bubble h2 { font-family: var(--font-display); font-size: 16px; margin-bottom: 8px; color: var(--green-accent); }
     .msg-bubble h3 { font-size: 13px; font-weight: 600; margin: 10px 0 4px; color: var(--brown-text); }
     .msg-bubble strong { font-weight: 600; }
@@ -222,7 +258,6 @@
     .quick-actions { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
     .quick-btn { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--cream-dark); background: transparent; color: var(--brown-light); font-size: 12px; cursor: pointer; transition: all 0.15s; font-family: var(--font-body); }
     .quick-btn:hover { background: var(--green-light); border-color: var(--green-mid); color: var(--green-accent); }
-
     .input-row { display: flex; gap: 10px; align-items: flex-end; }
     .chat-textarea { flex: 1; padding: 12px 16px; border-radius: 24px; border: 1.5px solid var(--cream-dark); background: #fff; font-size: 14px; font-family: var(--font-body); outline: none; resize: none; min-height: 46px; max-height: 120px; color: var(--brown-text); transition: border-color 0.18s; line-height: 1.5; }
     .chat-textarea:focus { border-color: var(--green-mid); }
@@ -315,19 +350,55 @@
       </button>
     </nav>
 
-    <div class="sidebar-inventory">
-      <div class="inventory-header">
-        <span>My Pantry</span>
+    <!-- Scrollable section: pantry + allergies -->
+    <div class="sidebar-scroll">
+
+      <!-- My Pantry -->
+      <div class="sidebar-inventory">
+        <div class="inventory-header">
+          <span>My Pantry</span>
+        </div>
+        <div class="add-ingredient-form">
+          <input type="text" id="newIngredient" placeholder="Add ingredient..."
+            onkeydown="if(event.key==='Enter') triggerIngredientPopup()" />
+          <button class="btn-add-small" onclick="triggerIngredientPopup()">+</button>
+        </div>
+        <ul class="inventory-list" id="inventoryList">
+          <li class="empty-inventory">No ingredients yet.</li>
+        </ul>
       </div>
-      <div class="add-ingredient-form">
-        <input type="text" id="newIngredient" placeholder="Add ingredient..."
-          onkeydown="if(event.key==='Enter') triggerIngredientPopup()" />
-        <button class="btn-add-small" onclick="triggerIngredientPopup()">+</button>
+
+      <!-- Allergies & Intolerances -->
+      <div class="sidebar-allergies">
+        <div class="allergies-header">
+          <span>⚠️ Allergies & Intolerances</span>
+        </div>
+
+        <!-- Quick-select common allergens -->
+        <div class="allergy-chips">
+          <button class="allergy-chip-btn" onclick="toggleCommonAllergy(this, 'Gluten')">Gluten</button>
+          <button class="allergy-chip-btn" onclick="toggleCommonAllergy(this, 'Lactose')">Lactose</button>
+          <button class="allergy-chip-btn" onclick="toggleCommonAllergy(this, 'Nuts')">Nuts</button>
+          <button class="allergy-chip-btn" onclick="toggleCommonAllergy(this, 'Eggs')">Eggs</button>
+          <button class="allergy-chip-btn" onclick="toggleCommonAllergy(this, 'Soy')">Soy</button>
+          <button class="allergy-chip-btn" onclick="toggleCommonAllergy(this, 'Shellfish')">Shellfish</button>
+          <button class="allergy-chip-btn" onclick="toggleCommonAllergy(this, 'Fish')">Fish</button>
+        </div>
+
+        <!-- Custom allergy input -->
+        <div class="add-allergy-form">
+          <input type="text" id="newAllergy" placeholder="Other allergy..."
+            onkeydown="if(event.key==='Enter') addCustomAllergy()" />
+          <button class="btn-add-allergy" onclick="addCustomAllergy()" title="Add">+</button>
+        </div>
+
+        <!-- Active allergies list -->
+        <ul class="allergy-list" id="allergyList">
+          <li class="empty-allergies">No allergies saved.</li>
+        </ul>
       </div>
-      <ul class="inventory-list" id="inventoryList">
-        <li class="empty-inventory">No ingredients yet.</li>
-      </ul>
-    </div>
+
+    </div><!-- end sidebar-scroll -->
 
     <div class="impact-widget">
       <div class="impact-title">🌱 My Impact</div>
@@ -415,7 +486,6 @@
       </div>
       <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
     </div>
-
     <div class="modal-field">
       <label>Quantity <span class="required">*</span></label>
       <div class="menge-row">
@@ -429,7 +499,6 @@
         </select>
       </div>
     </div>
-
     <div class="modal-field">
       <label>Best before <span class="required">*</span></label>
       <input type="date" class="date-input" id="modalHaltbarkeit" oninput="clearError()" />
@@ -440,9 +509,7 @@
         <button class="quick-date-btn" onclick="setQuickDate(30)">+1 month</button>
       </div>
     </div>
-
     <div class="modal-error" id="modalError"></div>
-
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-confirm" id="btnConfirm" onclick="confirmIngredient()">✅ Add</button>
@@ -458,6 +525,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     loadInventory();
+    loadAllergies();
     refreshStats();
     document.getElementById('modalHaltbarkeit').min = new Date().toISOString().split('T')[0];
     addBotMessage(`## 🌿 Welcome to the ZeroWaste Kitchen Bot!
@@ -466,6 +534,7 @@ I'm here to help you use up your ingredients and reduce food waste.
 
 **Here's how it works:**
 - Add ingredients to your pantry on the left
+- Set your allergies & intolerances once in the sidebar — I'll always respect them
 - Ask me for recipe ideas or use the quick actions below
 - I always prioritize ingredients that are expiring soon! 🥦
 
@@ -554,8 +623,7 @@ What would you like to cook today?`);
 
     try {
       const res = await fetch(`${API}/api/inventory/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: pendingIngredientName, menge, einheit, haltbar_bis: haltbar })
       });
       const data = await res.json();
@@ -597,7 +665,7 @@ What would you like to cook today?`);
       const res = await fetch(`${API}/api/inventory`);
       const data = await res.json();
       renderInventory(data.inventory || []);
-    } catch { console.warn('Backend unreachable, using local mode.'); }
+    } catch { console.warn('Backend unreachable.'); }
   }
 
   function renderInventory(items) {
@@ -626,6 +694,85 @@ What would you like to cook today?`);
     } catch { console.warn('Offline'); }
   }
 
+  // ─── Allergies ───────────────────────────────────────────────────
+  const COMMON_ALLERGENS = ['Gluten','Lactose','Nuts','Eggs','Soy','Shellfish','Fish'];
+
+  async function loadAllergies() {
+    try {
+      const res = await fetch(`${API}/api/allergies`);
+      const data = await res.json();
+      renderAllergies(data.allergies || []);
+      // Sync checkbox buttons state
+      COMMON_ALLERGENS.forEach(name => {
+        const active = (data.allergies || []).some(a => a.name.toLowerCase() === name.toLowerCase());
+        document.querySelectorAll('.allergy-chip-btn').forEach(btn => {
+          if (btn.textContent === name) btn.classList.toggle('active', active);
+        });
+      });
+    } catch { console.warn('Could not load allergies.'); }
+  }
+
+  function renderAllergies(items) {
+    const list = document.getElementById('allergyList');
+    if (items.length === 0) { list.innerHTML = '<li class="empty-allergies">No allergies saved.</li>'; return; }
+    list.innerHTML = items.map(a => `
+      <li class="allergy-tag">
+        <span>⚠️ ${a.name}</span>
+        <button class="allergy-tag-remove" onclick="removeAllergy('${a.name}')" title="Remove">×</button>
+      </li>`).join('');
+  }
+
+  async function toggleCommonAllergy(btn, name) {
+    if (btn.classList.contains('active')) {
+      await removeAllergy(name);
+    } else {
+      await addAllergy(name);
+    }
+  }
+
+  async function addCustomAllergy() {
+    const input = document.getElementById('newAllergy');
+    const name = input.value.trim();
+    if (!name) return;
+    await addAllergy(name);
+    input.value = '';
+  }
+
+  async function addAllergy(name) {
+    try {
+      const res = await fetch(`${API}/api/allergies/add`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        renderAllergies(data.allergies);
+        // Sync button state
+        document.querySelectorAll('.allergy-chip-btn').forEach(btn => {
+          if (btn.textContent === name) btn.classList.add('active');
+        });
+      }
+    } catch { console.warn('Offline'); }
+  }
+
+  async function removeAllergy(name) {
+    try {
+      const res = await fetch(`${API}/api/allergies/remove`, {
+        method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        renderAllergies(data.allergies);
+        // Sync button state
+        document.querySelectorAll('.allergy-chip-btn').forEach(btn => {
+          if (btn.textContent === name) btn.classList.remove('active');
+        });
+      }
+    } catch { console.warn('Offline'); }
+  }
+
+  // ─── Expiry check ────────────────────────────────────────────────
   async function checkExpiring() {
     try {
       const res = await fetch(`${API}/api/inventory/expiring?days=3`);
@@ -672,9 +819,7 @@ What would you like to cook today?`);
     const div = document.createElement('div');
     div.className = 'message user';
     div.innerHTML = `
-      <div class="msg-avatar">
-        <img src="/static/logo2.png" alt="User">
-      </div>
+      <div class="msg-avatar"><img src="/static/logo2.png" alt="User"></div>
       <div class="msg-body">
         <div class="msg-bubble">${escapeHtml(text)}</div>
         <div class="msg-time">${now}</div>
@@ -704,9 +849,7 @@ What would you like to cook today?`);
         </div>`).join('')}</div>`;
     }
     div.innerHTML = `
-      <div class="msg-avatar">
-        <img src="/static/logo.png" alt="Bot">
-      </div>
+      <div class="msg-avatar"><img src="/static/logo.png" alt="Bot"></div>
       <div class="msg-body">
         <div class="msg-bubble">${renderMarkdown(markdown)}${cardsHtml}</div>
         <div class="msg-time">${now}</div>
@@ -719,9 +862,7 @@ What would you like to cook today?`);
     const div = document.createElement('div');
     div.className = 'message bot'; div.id = 'typing';
     div.innerHTML = `
-      <div class="msg-avatar">
-        <img class="typing-logo" src="/static/logo.png" alt="Bot is thinking">
-      </div>
+      <div class="msg-avatar"><img class="typing-logo" src="/static/logo.png" alt="Thinking"></div>
       <div class="msg-body">
         <div class="msg-bubble">
           <div class="typing-indicator"><span></span><span></span><span></span></div>
@@ -779,7 +920,7 @@ What would you like to cook today?`);
       }
     } catch {
       hideTyping();
-      addBotMessage('⚠️ Could not connect to the backend. Make sure the server is running (`uvicorn backend.main:app --reload`).');
+      addBotMessage('⚠️ Could not connect to the backend. Make sure the server is running.');
     }
     refreshStats();
   }
@@ -809,7 +950,6 @@ What would you like to cook today?`);
   }
 
   function sendQuick(text) { document.getElementById('chatInput').value = text; sendMessage(); }
-
   function scrollToBottom() { const el = document.getElementById('chatMessages'); setTimeout(() => el.scrollTop = el.scrollHeight, 50); }
   function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
   function escapeHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
