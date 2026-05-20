@@ -1,11 +1,12 @@
-"""
-main.py – FastAPI Backend for the ZeroWaste Kitchen Bot
-Start with: uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-"""
+# main.py – FastAPI Backend for the ZeroWaste Kitchen Bot
+# Start with:
+# uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
 import json
 import os
+import base64
 from contextlib import asynccontextmanager
+
 from openai import OpenAI
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,21 +15,43 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from backend import database as db
+from backend.config import (
+    ACADEMIC_CLOUD_API_KEY,
+    ACADEMIC_CLOUD_BASE_URL,
+    LLM_MODEL,
+)
 
-# ─── Configuration ────────────────────────────────────────────────────────────
-API_KEY  = os.getenv("ACADEMIC_CLOUD_API_KEY", "90718c8494d63cf613bd4a4d62534b3b")
-BASE_URL = "https://chat-ai.academiccloud.de/v1"
-MODEL    = os.getenv("LLM_MODEL", "qwen3-30b-a3b-instruct-2507")
-
-client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
+# ─── OpenAI Client ────────────────────────────────────────────────────────────
+client = OpenAI(
+    api_key=ACADEMIC_CLOUD_API_KEY,
+    base_url=ACADEMIC_CLOUD_BASE_URL,
+)
 
 # ─── Prompts ──────────────────────────────────────────────────────────────────
 SYSTEM_PROMPT_BASE = """
-You are the ZeroWaste Kitchen Bot — a knowledgeable, friendly cooking assistant dedicated to reducing food waste.
-Always respond in English. Use Markdown formatting (**, -, 1.) to structure your answers clearly.
-Reference sustainability and UN SDG 12 (Responsible Consumption) where relevant.
-You will be given the user's current pantry as context. Always prioritize ingredients that are expiring soon.
-Never suggest throwing food away — always find a use for it.
+You are the Food Rescue Chatbot.
+
+Your goal:
+You help users reduce food waste in everyday life.
+
+You can:
+- analyze available ingredients
+- suggest suitable recipes based on what the user already has
+- prioritize ingredients that are about to expire
+- explain food shelf life
+- explain the difference between best-before dates and use-by dates
+- consider allergies and intolerances
+- give practical tips for using leftovers
+
+Rules:
+- Always answer in English.
+- Be friendly, clear, practical, and easy to understand.
+- Do not casually suggest throwing food away.
+- When food safety is involved, be careful and responsible.
+- For meat, fish, raw eggs, mold, bad smell, slimy texture, or unusual color, clearly warn the user.
+- Explain briefly why certain ingredients should be used first.
+- Suggest realistic recipes that people would actually cook.
+- Mention food waste reduction and sustainability when relevant.
 {allergy_block}
 """
 
@@ -36,22 +59,22 @@ SUGGESTION_PROMPT_BASE = """
 You are a professional chef with 20 years of experience. Your task is to suggest exactly 3 recipes based on the user's pantry.
 
 STRICT RULES — follow every one without exception:
-1. CULINARY SANITY: Only suggest dishes that are genuinely delicious and would be served in a real restaurant or home kitchen. Never combine ingredients that don't belong together (e.g. Nutella with meat, sweet spreads as marinades, or any other absurd pairing). Ask yourself: "Would a real cook actually make this?" If the answer is no, do not suggest it.
+1. CULINARY SANITY: Only suggest dishes that are genuinely delicious and would be served in a real restaurant or home kitchen. Never combine ingredients that don't belong together.
 2. BASICS ARE ALWAYS AVAILABLE: Assume the user always has salt, pepper, oil, butter, garlic, onions, and water — even if not listed in the pantry.
-3. USER WISH IS HIGHEST PRIORITY: If the user expresses a specific craving or preference (e.g. "pasta", "something spicy", "Mediterranean", "vegetarian"), ALL 3 suggestions must match that wish exactly. Never ignore it.
+3. USER WISH IS HIGHEST PRIORITY: If the user expresses a specific craving or preference, ALL 3 suggestions must match that wish exactly.
 4. MISSING INGREDIENTS: If a key ingredient for the requested dish isn't in the pantry, you may still suggest the dish — mark missing items with "(buy if needed)" in the ingredients list.
 5. EXPIRY FIRST: Prioritize ingredients that expire soonest (visible from the [BBD: date] tag in the pantry).
-6. VARIETY: The 3 dishes must be meaningfully different from each other — not the same dish with minor variations.
-7. QUALITY OVER QUANTITY: Each suggestion should feel appealing and appetizing, as if written for a food magazine.
+6. VARIETY: The 3 dishes must be meaningfully different from each other.
+7. QUALITY OVER QUANTITY: Each suggestion should feel appealing and appetizing.
 
 Respond ONLY with raw JSON — no backticks, no explanation, no comments:
-{{
+{
   "suggestions": [
-    {{"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "easy", "duration_min": 20}},
-    {{"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "medium", "duration_min": 35}},
-    {{"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "easy", "duration_min": 15}}
+    {"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "easy", "duration_min": 20},
+    {"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "medium", "duration_min": 35},
+    {"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "easy", "duration_min": 15}
   ]
-}}
+}
 Difficulty must be exactly one of: "easy", "medium", "advanced".
 {allergy_block}
 """
@@ -86,9 +109,23 @@ Which pantry ingredients should be used up soon and why.
 {allergy_block}
 """
 
+IMAGE_ANALYSIS_PROMPT = """
+You are the Food Rescue Chatbot.
 
+Analyze the uploaded food or fridge image.
+Identify visible ingredients as accurately as possible.
+
+Rules:
+- Always answer in English.
+- List only ingredients you can reasonably see.
+- If something is uncertain, mark it as "possibly".
+- Do not invent ingredients.
+- Suggest which visible ingredients should be used first if they look perishable.
+- Mention food waste reduction when relevant.
+"""
+
+# ─── Helpers ─────────────────────────────────────────────────────────────────
 def build_allergy_block() -> str:
-    """Reads current allergies from DB and builds the warning block for the prompt."""
     allergies = db.get_allergy_names()
     if not allergies:
         return ""
@@ -100,8 +137,94 @@ def build_allergy_block() -> str:
         "- Always suggest allergen-free alternatives where possible.\n"
     )
 
+def format_inventory_for_prompt() -> str:
+    ingredients = db.get_all_ingredients()
+    if not ingredients:
+        return "(pantry is empty)"
+    lines = []
+    for i in ingredients:
+        line = f"{i['name']} ({i['menge']} {i['einheit']}) [BBD: {i['haltbar_bis']}]"
+        lines.append(line)
+    return ", ".join(lines)
 
-# ─── App & DB Init ────────────────────────────────────────────────────────────
+def build_context(ingredients=None, allergies=None):
+    ingredients = ingredients or []
+    allergies = allergies or []
+
+    ingredient_text = "No ingredients provided."
+    if ingredients:
+        ingredient_lines = []
+        for item in ingredients:
+            line = f"- {item.get('name')}"
+            if item.get("menge") is not None and item.get("einheit"):
+                line += f" ({item['menge']} {item['einheit']})"
+            if item.get("haltbar_bis"):
+                line += f", best before: {item['haltbar_bis']}"
+            ingredient_lines.append(line)
+        ingredient_text = "\n".join(ingredient_lines)
+
+    allergy_text = "No allergies or intolerances provided."
+    if allergies:
+        allergy_text = ", ".join(allergies)
+
+    return f"""
+Current ingredients:
+{ingredient_text}
+
+Allergies / intolerances:
+{allergy_text}
+"""
+
+def ask_llm(message: str, history=None, ingredients=None, allergies=None, system_prompt=None, temperature=0.7, max_tokens=1200) -> str:
+    history = history or []
+    system_prompt = system_prompt or SYSTEM_PROMPT_BASE.format(allergy_block=build_allergy_block())
+    context = build_context(ingredients, allergies)
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "system", "content": context},
+        *history[-10:],
+        {"role": "user", "content": message},
+    ]
+
+    response = client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
+    return response.choices[0].message.content.strip()
+
+def analyze_food_image(image_bytes: bytes, mime_type: str) -> str:
+    encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+
+    response = client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=[
+            {"role": "system", "content": IMAGE_ANALYSIS_PROMPT},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Please analyze this image and list the visible food ingredients. Then suggest what could be cooked with them."
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{mime_type};base64,{encoded_image}"
+                        }
+                    }
+                ]
+            }
+        ],
+        temperature=0.4,
+        max_tokens=1000,
+    )
+
+    return response.choices[0].message.content.strip()
+
+# ─── App & DB Init ───────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init_db()
@@ -120,10 +243,10 @@ frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
 if os.path.exists(frontend_path):
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")
 
-# ─── Pydantic Models ──────────────────────────────────────────────────────────
+# ─── Models ──────────────────────────────────────────────────────────────────
 class ChatMessage(BaseModel):
     message: str
-    history: list[dict] = []
+    history: list[dict] = Field(default_factory=list)
 
 class IngredientAdd(BaseModel):
     name: str
@@ -135,12 +258,12 @@ class IngredientRemove(BaseModel):
     name: str
 
 class RatingRequest(BaseModel):
-    bewertung: int  # 1-5
-    notiz: str = None
+    bewertung: int
+    notiz: str | None = None
 
 class RecipeRequest(BaseModel):
     recipe_name: str
-    history: list[dict] = []
+    history: list[dict] = Field(default_factory=list)
 
 class AllergyAdd(BaseModel):
     name: str = Field(..., description="Name of the allergy, e.g. Lactose, Gluten, Nuts")
@@ -148,19 +271,7 @@ class AllergyAdd(BaseModel):
 class AllergyRemove(BaseModel):
     name: str
 
-# ─── Helper ───────────────────────────────────────────────────────────────────
-def format_inventory_for_prompt() -> str:
-    ingredients = db.get_all_ingredients()
-    if not ingredients:
-        return "(pantry is empty)"
-    lines = []
-    for i in ingredients:
-        line = f"{i['name']} ({i['menge']} {i['einheit']}) [BBD: {i['haltbar_bis']}]"
-        lines.append(line)
-    return ", ".join(lines)
-
-# ─── Endpoints ────────────────────────────────────────────────────────────────
-
+# ─── Endpoints ───────────────────────────────────────────────────────────────
 @app.get("/")
 async def serve_frontend():
     index_path = os.path.join(frontend_path, "index.html")
@@ -168,58 +279,46 @@ async def serve_frontend():
         return FileResponse(index_path)
     return {"message": "ZeroWaste Kitchen Bot API is running!"}
 
-
 @app.get("/api/inventory")
 async def get_inventory():
-    """Returns the full pantry list."""
     return {"inventory": db.get_all_ingredients()}
-
 
 @app.post("/api/inventory/add")
 async def add_ingredient(item: IngredientAdd):
-    """Adds an ingredient to the pantry. All fields are required."""
     allowed_units = {"g", "kg", "ml", "l", "pcs"}
     if item.einheit not in allowed_units:
         raise HTTPException(
             status_code=422,
             detail=f"Invalid unit '{item.einheit}'. Allowed: {', '.join(sorted(allowed_units))}"
         )
+
     added = db.add_ingredient(item.name, item.menge, item.einheit, item.haltbar_bis)
     if not added:
         raise HTTPException(status_code=409, detail=f"'{item.name}' is already in the pantry.")
+
     return {
         "success": True,
         "message": f"✅ '{item.name}' added ({item.menge} {item.einheit}, BBD: {item.haltbar_bis}).",
         "inventory": db.get_all_ingredients()
     }
 
-
 @app.delete("/api/inventory/remove")
 async def remove_ingredient(item: IngredientRemove):
-    """Removes an ingredient from the pantry."""
     removed = db.remove_ingredient(item.name)
     if not removed:
         raise HTTPException(status_code=404, detail=f"'{item.name}' not found.")
     return {"success": True, "message": f"🗑️ '{item.name}' removed.", "inventory": db.get_all_ingredients()}
 
-
 @app.get("/api/inventory/expiring")
 async def get_expiring(days: int = 3):
-    """Returns ingredients expiring within the given number of days."""
     return {"expiring": db.get_expiring_soon(days)}
-
-
-# ─── Allergy Endpoints ────────────────────────────────────────────────────────
 
 @app.get("/api/allergies")
 async def get_allergies():
-    """Returns all saved allergies."""
     return {"allergies": db.get_all_allergies()}
-
 
 @app.post("/api/allergies/add")
 async def add_allergy(item: AllergyAdd):
-    """Adds an allergy or intolerance."""
     added = db.add_allergy(item.name)
     if not added:
         raise HTTPException(status_code=409, detail=f"'{item.name}' is already saved.")
@@ -229,10 +328,8 @@ async def add_allergy(item: AllergyAdd):
         "allergies": db.get_all_allergies()
     }
 
-
 @app.delete("/api/allergies/remove")
 async def remove_allergy(item: AllergyRemove):
-    """Removes an allergy."""
     removed = db.remove_allergy(item.name)
     if not removed:
         raise HTTPException(status_code=404, detail=f"'{item.name}' not found.")
@@ -242,12 +339,10 @@ async def remove_allergy(item: AllergyRemove):
         "allergies": db.get_all_allergies()
     }
 
-
-# ─── Chat Endpoints ───────────────────────────────────────────────────────────
-
 @app.post("/api/chat/suggest")
 async def suggest_recipes(req: ChatMessage):
-    """Returns 3 recipe suggestions based on the current pantry."""
+    inventory = db.get_all_ingredients()
+    allergies = db.get_all_allergies()
     inventory_str = format_inventory_for_prompt()
     allergy_block = build_allergy_block()
 
@@ -266,7 +361,7 @@ async def suggest_recipes(req: ChatMessage):
 
     try:
         response = client.chat.completions.create(
-            model=MODEL,
+            model=LLM_MODEL,
             messages=[
                 {"role": "system", "content": SUGGESTION_PROMPT_BASE.format(allergy_block=allergy_block)},
                 {"role": "user", "content": prompt}
@@ -283,22 +378,19 @@ async def suggest_recipes(req: ChatMessage):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.post("/api/chat/recipe")
 async def get_recipe(req: RecipeRequest):
-    """Returns the full recipe for a selected suggestion."""
-    inventory_str = format_inventory_for_prompt()
-    allergy_block = build_allergy_block()
     prompt = (
-        f"Pantry: {inventory_str}\n\n"
+        f"Pantry: {format_inventory_for_prompt()}\n\n"
         f"Write the full recipe for: '{req.recipe_name}'\n"
         "Use pantry ingredients as the base. Salt, pepper, oil, and other basics can always be added."
     )
+
     try:
         response = client.chat.completions.create(
-            model=MODEL,
+            model=LLM_MODEL,
             messages=[
-                {"role": "system", "content": RECIPE_PROMPT_BASE.format(allergy_block=allergy_block)},
+                {"role": "system", "content": RECIPE_PROMPT_BASE.format(allergy_block=build_allergy_block())},
                 *req.history[-4:],
                 {"role": "user", "content": prompt}
             ],
@@ -311,44 +403,34 @@ async def get_recipe(req: RecipeRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.post("/api/chat/message")
 async def chat(req: ChatMessage):
-    """General chat conversation."""
-    inventory_str = format_inventory_for_prompt()
-    allergy_block = build_allergy_block()
-    context = f"[Current pantry: {inventory_str}]\n\n{req.message}"
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT_BASE.format(allergy_block=allergy_block)},
-        *req.history[-10:],
-        {"role": "user", "content": context}
-    ]
+    inventory = db.get_all_ingredients()
+    allergies = db.get_all_allergies()
+    context_message = f"[Current pantry: {format_inventory_for_prompt()}]\n\n{req.message}"
+
     try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=messages,
-            max_tokens=1000,
+        reply = ask_llm(
+            message=context_message,
+            history=req.history,
+            ingredients=inventory,
+            allergies=allergies,
             temperature=0.7,
+            max_tokens=1000,
         )
-        return {"reply": response.choices[0].message.content.strip()}
+        return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.post("/api/recipes/rate")
 async def rate_recipe(req: RatingRequest):
-    """Rates the last cooked recipe."""
     db.rate_last_recipe(req.bewertung, req.notiz)
     return {"success": True, "message": f"Rating saved: {req.bewertung}⭐"}
 
-
 @app.get("/api/history")
 async def get_history(limit: int = 10):
-    """Returns the cooking history."""
     return {"history": db.get_recipe_history(limit)}
-
 
 @app.get("/api/stats")
 async def get_stats():
-    """Returns impact statistics."""
     return db.get_stats()

@@ -71,7 +71,31 @@
     .nav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
     .nav-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
     .nav-btn .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    /* ─── Button image ───────────────────────────────────────────────────── */
+    .image-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1.5px solid var(--cream-dark);
+  background: #fff;
+  color: var(--green-dark);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, transform 0.12s;
+  flex-shrink: 0;
+}
 
+.image-btn:hover {
+  background: var(--green-light);
+  transform: scale(1.05);
+}
+
+.image-btn:active {
+  transform: scale(0.95);
+}
     /* Scrollable middle section */
     .sidebar-scroll {
       flex: 1; overflow-y: auto; display: flex; flex-direction: column;
@@ -213,7 +237,10 @@
     .chat-messages::-webkit-scrollbar-thumb { background: var(--cream-dark); border-radius: 4px; }
 
     .message { display: flex; gap: 10px; animation: slideUp 0.25s ease; max-width: 75%; }
-    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.user { 
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
     .message.bot  { align-self: flex-start; }
     .msg-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
     .message.bot .msg-avatar { background: var(--cream); overflow: hidden; }
@@ -445,12 +472,26 @@
           <button class="quick-btn" onclick="sendQuick('What can I cook in under 20 minutes?')">⏱️ Quick cook</button>
         </div>
         <div class="input-row">
-          <textarea class="chat-textarea" id="chatInput" placeholder="Type a message..."
-            rows="1"
-            onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessage();}"
-            oninput="autoResize(this)"></textarea>
-          <button class="send-btn" onclick="sendMessage()">➤</button>
-        </div>
+  <textarea class="chat-textarea" id="chatInput" placeholder="Type a message..."
+    rows="1"
+    onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessage();}"
+    oninput="autoResize(this)"></textarea>
+
+  <button class="image-btn" onclick="document.getElementById('imageInput').click()" title="Upload image">
+    🖼️
+  </button>
+
+  <input
+    type="file"
+    id="imageInput"
+    accept="image/*"
+    capture="environment"
+    style="display:none"
+    onchange="handleImageUpload(this)"
+  />
+
+  <button class="send-btn" onclick="sendMessage()">➤</button>
+</div>
       </div>
     </div>
 
@@ -774,44 +815,62 @@ What would you like to cook today?`);
 
   // ─── Expiry check ────────────────────────────────────────────────
   async function checkExpiring() {
-    try {
-      const res = await fetch(`${API}/api/inventory/expiring?days=3`);
-      const data = await res.json();
-      if (data.expiring && data.expiring.length > 0) {
-        const names = data.expiring.map(i => `**${i.name}** (BBD: ${i.haltbar_bis})`).join(', ');
-        addBotMessage(`⚠️ **The following ingredients are expiring soon:**\n\n${names}\n\nShould I suggest recipes that use these up?`);
-      } else {
-        addBotMessage('✅ Great! All your ingredients are still fresh. No action needed.');
-      }
-    } catch { addBotMessage('⚠️ Could not load expiry warnings (backend unreachable).'); }
+  try {
+    const res = await fetch(`${API}/api/inventory/expiring?days=3`);
+    const data = await res.json();
+
+    if (data.expiring && data.expiring.length > 0) {
+      const names = data.expiring.map(i => `${i.name} (BBD: ${i.haltbar_bis})`).join(', ');
+      addBotMessage(`⚠️ The following ingredients are expiring soon: ${names}\n\nI suggest recipes that use these up first.`);
+    } else {
+      addBotMessage('✅ Great! All your ingredients are still fresh. No action needed.');
+    }
+  } catch {
+    addBotMessage('Could not load expiry warnings — backend unreachable.');
   }
+}
 
   // ─── Stats ───────────────────────────────────────────────────────
-  async function refreshStats() {
-    try {
-      const res = await fetch(`${API}/api/stats`);
-      const data = await res.json();
-      document.getElementById('statsCooked').textContent = data.rezepte_gekocht || 0;
-      document.getElementById('bigCooked').textContent = data.rezepte_gekocht || 0;
-      document.getElementById('bigCo2').textContent = data.co2_gespart_kg || 0;
-      document.getElementById('bigRating').textContent = data.durchschnittsbewertung || '–';
-      document.getElementById('statsCo2').textContent = `You've already saved ${data.co2_gespart_kg || 0} kg of CO₂! 🌍`;
-    } catch { /* offline */ }
+async function refreshStats() {
+  try {
+    const res = await fetch(`${API}/api/stats`);
+    const data = await res.json();
+
+    document.getElementById('statsCooked').textContent = data.rezepte_gekocht || 0;
+    document.getElementById('bigCooked').textContent = data.rezepte_gekocht || 0;
+    document.getElementById('bigCo2').textContent = data.co2_gespart_kg || 0;
+    document.getElementById('bigRating').textContent = data.durchschnittsbewertung || '–';
+    document.getElementById('statsCo2').textContent =
+      `You've already saved ${data.co2_gespart_kg || 0} kg of CO₂! 🌍`;
+  } catch {
+    // offline fallback
   }
+}
 
   async function loadHistory() {
-    try {
-      const res = await fetch(`${API}/api/history`);
-      const data = await res.json();
-      const list = document.getElementById('historyList');
-      if (!data.history || data.history.length === 0) { list.innerHTML = '<p style="color: var(--brown-light); font-size: 14px;">No recipes cooked yet.</p>'; return; }
-      list.innerHTML = data.history.map(h => `
-        <div class="history-item">
-          <div><div class="recipe-name">${h.rezept_name}</div><div class="recipe-date">${h.gekocht_am}</div></div>
-          <div class="stars">${h.bewertung ? '⭐'.repeat(h.bewertung) : '–'}</div>
-        </div>`).join('');
-    } catch { /* offline */ }
+  try {
+    const res = await fetch(`${API}/api/history`);
+    const data = await res.json();
+    const list = document.getElementById('historyList');
+
+    if (!data.history || data.history.length === 0) {
+      list.innerHTML = '<p style="color: var(--brown-light); font-size: 14px;">No recipes cooked yet.</p>';
+      return;
+    }
+
+    list.innerHTML = data.history.map(h => `
+      <div class="history-item">
+        <div>
+          <div class="recipe-name">${h.rezeptname}</div>
+          <div class="recipe-date">${h.gekochtam}</div>
+        </div>
+        <div class="stars">${h.bewertung ? '★'.repeat(h.bewertung) : ''}</div>
+      </div>
+    `).join('');
+  } catch {
+    // offline fallback
   }
+}
 
   // ─── Chat ────────────────────────────────────────────────────────
   function addUserMessage(text) {
@@ -965,6 +1024,38 @@ What would you like to cook today?`);
       .replace(/\n/g, '<br>')
       .replace(/^(?!<[hul]|<\/[hul]|<li|<br)(.+)$/gm, '<p>$1</p>');
   }
+
+  async function handleImageUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  addUserMessage(`📷 Uploaded image: ${file.name}`);
+  showTyping();
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API}/api/chat/image`, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+    hideTyping();
+
+    if (res.ok) {
+      addBotMessage(data.reply || data.result || 'Image processed.');
+    } else {
+      addBotMessage(data.detail || 'Could not analyze the image.');
+    }
+  } catch (err) {
+    hideTyping();
+    addBotMessage('Could not upload the image. Make sure the backend is running.');
+  } finally {
+    input.value = '';
+  }
+}
 </script>
 </body>
 </html>
