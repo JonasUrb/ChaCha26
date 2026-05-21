@@ -505,7 +505,7 @@
       </div>
       <div class="topbar-actions">
         <button class="topbar-btn" onclick="checkExpiring()">⚠️ Expiry Warnings</button>
-        <button class="topbar-btn" onclick="refreshStats()">↻ Refresh</button>
+        <button class="topbar-btn" onclick="refreshAll()">↻ Refresh</button>
       </div>
     </div>
 
@@ -525,19 +525,6 @@
     rows="1"
     onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessage();}"
     oninput="autoResize(this)"></textarea>
-
-  <button class="image-btn" onclick="document.getElementById('imageInput').click()" title="Upload image">
-    🖼️
-  </button>
-
-  <input
-    type="file"
-    id="imageInput"
-    accept="image/*"
-    capture="environment"
-    style="display:none"
-    onchange="handleImageUpload(this)"
-  />
 
   <button class="send-btn" onclick="sendMessage()">➤</button>
 </div>
@@ -896,6 +883,39 @@ async function refreshStats() {
   }
 }
 
+async function refreshAll() {
+  try {
+    await fetch(`${API}/api/inventory/clear`, {
+      method: 'DELETE'
+    });
+  } catch {
+    console.warn('Could not clear pantry.');
+  }
+
+  await loadInventory();
+  await loadAllergies();
+  await refreshStats();
+
+  const chat = document.getElementById('chatMessages');
+  chat.innerHTML = '';
+
+  conversationHistory = [];
+  pendingSuggestions = null;
+
+  addBotMessage(`## 🌿 Welcome to the Food Rescue Bot!
+
+I'm here to help you use up your ingredients and reduce food waste.
+
+**Here's how it works:**
+- Add ingredients to your pantry on the left
+- Set your allergies & intolerances once in the sidebar — I'll always respect them
+- Ask me for recipe ideas or use the quick actions below
+- I always prioritize ingredients that are expiring soon! 🥦
+
+What would you like to cook today?`);
+}
+
+
   async function loadHistory() {
   try {
     const res = await fetch(`${API}/api/history`);
@@ -1162,27 +1182,8 @@ async function refreshStats() {
   // Horizontal rules like ---
   html = html.replace(/^---$/gm, "<hr>");
 
-  // Bullet lists
-  html = html.replace(/(?:^|\n)((?:- .+(?:\n|$))+)/g, function (match) {
-    const items = match
-      .trim()
-      .split("\n")
-      .map(line => line.replace(/^- (.+)/, "<li>$1</li>"))
-      .join("");
-
-    return `<ul>${items}</ul>`;
-  });
-
-  // Numbered lists
-  html = html.replace(/(?:^|\n)((?:\d+\. .+(?:\n|$))+)/g, function (match) {
-    const items = match
-      .trim()
-      .split("\n")
-      .map(line => line.replace(/^\d+\. (.+)/, "<li>$1</li>"))
-      .join("");
-
-    return `<ol>${items}</ol>`;
-  });
+  // Lists
+  html = convertMarkdownLists(html);
 
   // Paragraphs
   html = html
@@ -1191,12 +1192,14 @@ async function refreshStats() {
       const trimmed = block.trim();
 
       if (!trimmed) return "";
+
       if (
         trimmed.startsWith("<h2") ||
         trimmed.startsWith("<h3") ||
         trimmed.startsWith("<ul") ||
         trimmed.startsWith("<ol") ||
         trimmed.startsWith("<table") ||
+        trimmed.startsWith("<div class=\"table-wrapper\"") ||
         trimmed.startsWith("<hr")
       ) {
         return trimmed;
@@ -1207,6 +1210,79 @@ async function refreshStats() {
     .join("");
 
   return html;
+}
+
+function convertMarkdownLists(text) {
+  const lines = text.split("\n");
+  const result = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Numbered list
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items = [];
+
+      while (i < lines.length) {
+        const current = lines[i];
+
+        if (/^\s*\d+\.\s+/.test(current)) {
+          items.push(current.replace(/^\s*\d+\.\s+/, "").trim());
+          i++;
+          continue;
+        }
+
+        if (
+          current.trim() === "" &&
+          i + 1 < lines.length &&
+          /^\s*\d+\.\s+/.test(lines[i + 1])
+        ) {
+          i++;
+          continue;
+        }
+
+        break;
+      }
+
+      result.push(`<ol>${items.map(item => `<li>${item}</li>`).join("")}</ol>`);
+      continue;
+    }
+
+    // Bullet list
+    if (/^\s*-\s+/.test(line)) {
+      const items = [];
+
+      while (i < lines.length) {
+        const current = lines[i];
+
+        if (/^\s*-\s+/.test(current)) {
+          items.push(current.replace(/^\s*-\s+/, "").trim());
+          i++;
+          continue;
+        }
+
+        if (
+          current.trim() === "" &&
+          i + 1 < lines.length &&
+          /^\s*-\s+/.test(lines[i + 1])
+        ) {
+          i++;
+          continue;
+        }
+
+        break;
+      }
+
+      result.push(`<ul>${items.map(item => `<li>${item}</li>`).join("")}</ul>`);
+      continue;
+    }
+
+    result.push(line);
+    i++;
+  }
+
+  return result.join("\n");
 }
 
 

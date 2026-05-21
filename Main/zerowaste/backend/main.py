@@ -412,6 +412,18 @@ async def remove_ingredient(item: IngredientRemove):
         "message": f"🗑️ '{item.name}' removed.",
         "inventory": db.get_all_ingredients(),
     }
+@app.delete("/api/inventory/clear")
+async def clear_inventory():
+    ingredients = db.get_all_ingredients()
+
+    for item in ingredients:
+        db.remove_ingredient(item["name"])
+
+    return {
+        "success": True,
+        "message": "Pantry cleared.",
+        "inventory": db.get_all_ingredients(),
+    }
 
 
 @app.get("/api/inventory/expiring")
