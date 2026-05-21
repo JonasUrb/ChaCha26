@@ -7,7 +7,7 @@ services:
       # Datenbank bleibt persistent, auch nach Container-Neustart
       - ./data:/app/data
     environment:
-      # API-Key sicher über .env-Datei setzen (NICHT hardcoden!)
       - ACADEMIC_CLOUD_API_KEY=${ACADEMIC_CLOUD_API_KEY}
-      - LLM_MODEL=${LLM_MODEL:-meta-llama-3.1-70b-instruct}
+      - ACADEMIC_CLOUD_BASE_URL=${ACADEMIC_CLOUD_BASE_URL:-https://chat-ai.academiccloud.de/v1}
+      - LLM_MODEL=${LLM_MODEL:-qwen3-30b-a3b-instruct-2507}
     restart: unless-stopped

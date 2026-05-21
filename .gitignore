@@ -1,0 +1,10 @@
+.DS_Store
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+data/
+Main/zerowaste/venv/
+Main/zerowaste/.env
+Main/zerowaste/data/
