@@ -1234,8 +1234,8 @@ What would you like to cook today?`);
 
   // Headings
   html = html
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.+)$/gm, "<h2>$1</h2>");
+    .replace(/^[ \t]*###\s*([^\n]+?)\s*$/gm, "<h3>$1</h3>")
+    .replace(/^[ \t]*##\s*([^\n]+?)\s*$/gm, "<h2>$1</h2>");
 
   // Bold text
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
