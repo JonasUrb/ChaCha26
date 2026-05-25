@@ -1001,6 +1001,43 @@ What would you like to cook today?`);
   }
   function hideTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
 
+  function isIngredientUncertaintyRequest(text) {
+    const uncertaintyPattern =
+      /\b(not sure|unsure|uncertain|worried|concerned|can i still|is it still|is my .* still|is the .* still|is this .* still|still okay|still ok|still good|safe to eat|safe to cook|safe to use|can i eat|can i use)\b/i;
+
+    const germanUncertaintyPattern =
+      /\b(unsicher|nicht sicher|weiss nicht|weiß nicht|sorge|besorgt|noch gut|noch okay|noch ok|kann ich.*(essen|verwenden|benutzen)|ist .* noch)\b/i;
+
+    const clearSafetyPattern =
+      /\b(expired|spoiled|gone bad|mold|mould|best before|use[- ]by|sell[- ]by|shelf life|food safety)\b/i;
+
+    const conditionPattern =
+      /\b(smell|smells|slimy|weird color|off color|bad smell)\b/i;
+
+    const clearGermanSafetyPattern =
+      /\b(abgelaufen|verdorben|schimmel|mhd|mindestens haltbar|verbrauchsdatum|lebensmittelsicherheit)\b/i;
+
+    const germanConditionPattern =
+      /\b(schlecht|riecht|geruch|schleimig|komisch|verfaerbt|verfärbt|haltbar)\b/i;
+
+    const foodPattern =
+      /\b(ingredient|ingredients|food|milk|egg|eggs|meat|fish|chicken|seafood|yogurt|cheese|dairy|cream|rice|pasta|leftovers|vegetable|fruit|bread|zutat|zutaten|lebensmittel|milch|ei|eier|fleisch|fisch|huhn|joghurt|kaese|käse|sahne|reis|nudeln|reste|gemuese|gemüse|obst|brot)\b/i;
+
+    return (
+      clearSafetyPattern.test(text) ||
+      clearGermanSafetyPattern.test(text) ||
+      (
+        (
+          uncertaintyPattern.test(text) ||
+          germanUncertaintyPattern.test(text) ||
+          conditionPattern.test(text) ||
+          germanConditionPattern.test(text)
+        ) &&
+        foodPattern.test(text)
+      )
+    );
+  }
+
   async function sendMessage() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
@@ -1033,11 +1070,35 @@ What would you like to cook today?`);
     const isShoppingListRequest =
       /\b(shopping list|grocery list|shopping|groceries|what should i buy|what to buy|buy next)\b/i.test(text);
 
+    const isIngredientUncertainty = isIngredientUncertaintyRequest(text);
+
     const isRecipeRequest =
       /\b(recipe|cook|dish|hungry|meal|lunch|dinner|breakfast|quick|fast)\b|feel like|what can i cook|what should i cook|make a recipe/i.test(text);
 
     try {
-      if (isShoppingListRequest) {
+      if (isIngredientUncertainty) {
+        const res = await fetch(`${API}/api/chat/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `The user is unsure whether one or more ingredients are still safe or usable. React directly to that concern before anything else. Do not jump straight to recipe suggestions. Give a calm, practical food-safety answer: identify the ingredient(s), explain what to check (smell, appearance, texture, packaging, storage, and date label), mention warning signs, ask for missing storage or date details if needed, and only suggest using the ingredient after it passes those checks. Answer in the user's language. User request: ${text}`,
+            history: conversationHistory
+          })
+        });
+
+        const data = await res.json();
+        hideTyping();
+
+        if (!res.ok) {
+          addBotMessage(`Backend error: ${data.detail || 'Unknown error'}`);
+          return;
+        }
+
+        addBotMessage(data.reply);
+        conversationHistory.push({ role: 'user', content: text });
+        conversationHistory.push({ role: 'assistant', content: data.reply });
+
+      } else if (isShoppingListRequest) {
         const res = await fetch(`${API}/api/chat/message`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
