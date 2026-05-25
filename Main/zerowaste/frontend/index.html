@@ -63,7 +63,7 @@
     .logo-icon { width: 74px; height: 74px; background: var(--cream); border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
     .logo-icon img { width: 100%; height: 100%; object-fit: contain; display: block; transform: translateX(-1px); }
     .sidebar-logo h1 { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: #fff; line-height: 1.2; }
-    .sidebar-logo p { font-size: 12px; color: rgba(255,255,255,0.65); margin-left: 54px; }
+    .sidebar-logo p { font-size: 11px; color: rgba(255,255,255,0.75); margin-left: 0; margin-top: 4px; white-space: nowrap;}
 
     .sidebar-nav { padding: 16px 12px 8px; }
     .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); padding: 0 12px; margin-bottom: 8px; margin-top: 4px; }
@@ -263,6 +263,52 @@
     .msg-bubble p { margin-bottom: 6px; }
     .msg-bubble p:last-child { margin-bottom: 0; }
 
+    .msg-bubble hr {
+      border: none;
+      border-top: 1px solid var(--cream-dark);
+      margin: 14px 0;
+    }
+
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 10px 0 14px;
+    }
+
+    .markdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 8px rgba(60, 80, 50, 0.08);
+    }
+
+    .markdown-table th {
+      background: var(--green-light);
+      color: var(--green-accent);
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+
+    .markdown-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--cream-dark);
+      color: var(--brown-text);
+      vertical-align: top;
+    }
+
+    .markdown-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .markdown-table tr:nth-child(even) td {
+      background: #fbf8f2;
+    }
+
     .suggestion-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
     .suggestion-card { background: var(--green-light); border: 1.5px solid rgba(90,150,100,0.25); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: all 0.18s; display: flex; align-items: flex-start; gap: 12px; }
     .suggestion-card:hover { background: #d4e8d6; border-color: var(--green-mid); transform: translateX(3px); }
@@ -362,9 +408,11 @@
         <div class="logo-icon">
           <img src="/static/logo.png" alt="Food Rescue Bot Logo">
         </div>
-        <h1>Food Rescue Bot<br>Kitchen Bot</h1>
+        <div>
+          <h1>Food Rescue Bot</h1>
+          <p>Waste less. Cook better.</p>
+        </div>
       </div>
-      <p>Waste less. Cook better.</p>
     </div>
 
     <nav class="sidebar-nav">
@@ -457,7 +505,7 @@
       </div>
       <div class="topbar-actions">
         <button class="topbar-btn" onclick="checkExpiring()">⚠️ Expiry Warnings</button>
-        <button class="topbar-btn" onclick="refreshStats()">↻ Refresh</button>
+        <button class="topbar-btn" onclick="refreshAll()">↻ Refresh</button>
       </div>
     </div>
 
@@ -470,25 +518,13 @@
           <button class="quick-btn" onclick="sendQuick('What is expiring soon?')">⚠️ Expiring soon</button>
           <button class="quick-btn" onclick="sendQuick('Give me a sustainability tip')">🌱 SDG tip</button>
           <button class="quick-btn" onclick="sendQuick('What can I cook in under 20 minutes?')">⏱️ Quick cook</button>
+          <button class="quick-btn" onclick="sendQuick('Can you create a shopping list?')">🛒 Shopping list</button>
         </div>
         <div class="input-row">
   <textarea class="chat-textarea" id="chatInput" placeholder="Type a message..."
     rows="1"
     onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendMessage();}"
     oninput="autoResize(this)"></textarea>
-
-  <button class="image-btn" onclick="document.getElementById('imageInput').click()" title="Upload image">
-    🖼️
-  </button>
-
-  <input
-    type="file"
-    id="imageInput"
-    accept="image/*"
-    capture="environment"
-    style="display:none"
-    onchange="handleImageUpload(this)"
-  />
 
   <button class="send-btn" onclick="sendMessage()">➤</button>
 </div>
@@ -847,6 +883,39 @@ async function refreshStats() {
   }
 }
 
+async function refreshAll() {
+  try {
+    await fetch(`${API}/api/inventory/clear`, {
+      method: 'DELETE'
+    });
+  } catch {
+    console.warn('Could not clear pantry.');
+  }
+
+  await loadInventory();
+  await loadAllergies();
+  await refreshStats();
+
+  const chat = document.getElementById('chatMessages');
+  chat.innerHTML = '';
+
+  conversationHistory = [];
+  pendingSuggestions = null;
+
+  addBotMessage(`## 🌿 Welcome to the Food Rescue Bot!
+
+I'm here to help you use up your ingredients and reduce food waste.
+
+**Here's how it works:**
+- Add ingredients to your pantry on the left
+- Set your allergies & intolerances once in the sidebar — I'll always respect them
+- Ask me for recipe ideas or use the quick actions below
+- I always prioritize ingredients that are expiring soon! 🥦
+
+What would you like to cook today?`);
+}
+
+
   async function loadHistory() {
   try {
     const res = await fetch(`${API}/api/history`);
@@ -861,8 +930,8 @@ async function refreshStats() {
     list.innerHTML = data.history.map(h => `
       <div class="history-item">
         <div>
-          <div class="recipe-name">${h.rezeptname}</div>
-          <div class="recipe-date">${h.gekochtam}</div>
+          <div class="recipe-name">${h.rezept_name}</div>
+          <div class="recipe-date">${h.gekocht_am}</div>
         </div>
         <div class="stars">${h.bewertung ? '★'.repeat(h.bewertung) : ''}</div>
       </div>
@@ -935,76 +1004,158 @@ async function refreshStats() {
   async function sendMessage() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
+
     if (!text) return;
-    input.value = ''; input.style.height = 'auto';
+
+    input.value = '';
+    input.style.height = 'auto';
 
     if (pendingSuggestions) {
       const num = parseInt(text);
-      if (num >= 1 && num <= 3) { addUserMessage(text); await selectRecipe(num - 1); return; }
-      if (['cancel','no','nope'].includes(text.toLowerCase())) {
-        addUserMessage(text); pendingSuggestions = null;
-        addBotMessage('Sure! What would you like to do instead?'); return;
+
+      if (num >= 1 && num <= 3) {
+        addUserMessage(text);
+        await selectRecipe(num - 1);
+        return;
+      }
+
+      if (['cancel', 'no', 'nope'].includes(text.toLowerCase())) {
+        addUserMessage(text);
+        pendingSuggestions = null;
+        addBotMessage('Sure! What would you like to do instead?');
+        return;
       }
     }
 
     addUserMessage(text);
     showTyping();
 
-    const isRecipeRequest = /recipe|cook|eat|dish|hungry|feel like|what can|meal|lunch|dinner|breakfast|quick|fast|make/i.test(text);
+    const isShoppingListRequest =
+      /\b(shopping list|grocery list|shopping|groceries|what should i buy|what to buy|buy next)\b/i.test(text);
+
+    const isRecipeRequest =
+      /\b(recipe|cook|dish|hungry|meal|lunch|dinner|breakfast|quick|fast)\b|feel like|what can i cook|what should i cook|make a recipe/i.test(text);
 
     try {
-      if (isRecipeRequest) {
-        const res = await fetch(`${API}/api/chat/suggest`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, history: conversationHistory })
+      if (isShoppingListRequest) {
+        const res = await fetch(`${API}/api/chat/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: `Please create a practical low-waste shopping list based on my current pantry. Focus on ingredients that complement what I already have, avoid unnecessary purchases, and explain briefly why each item is useful. User request: ${text}`,
+            history: conversationHistory
+          })
         });
+
         const data = await res.json();
         hideTyping();
+
+        if (!res.ok) {
+          addBotMessage(`Backend error: ${data.detail || 'Unknown error'}`);
+          return;
+        }
+
+        addBotMessage(data.reply);
+        conversationHistory.push({ role: 'user', content: text });
+        conversationHistory.push({ role: 'assistant', content: data.reply });
+
+      } else if (isRecipeRequest) {
+        const res = await fetch(`${API}/api/chat/suggest`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: conversationHistory
+          })
+        });
+
+        const data = await res.json();
+        hideTyping();
+
+        if (!res.ok) {
+          addBotMessage(`Backend error: ${data.detail || 'Unknown error'}`);
+          return;
+        }
+
         if (data.suggestions && data.suggestions.length > 0) {
           pendingSuggestions = data.suggestions;
-          addBotMessage('I found **3 recipe ideas** for your pantry!\n\nClick a card or type 1, 2 or 3 to see the full recipe.', data.suggestions);
+          addBotMessage(
+            'I found **3 recipe ideas** for your pantry!\n\nClick a card or type 1, 2 or 3 to see the full recipe.',
+            data.suggestions
+          );
         } else {
           addBotMessage("I couldn't find matching recipes. Try adding more ingredients to your pantry!");
         }
+
       } else {
         const res = await fetch(`${API}/api/chat/message`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, history: conversationHistory })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: conversationHistory
+          })
         });
+
         const data = await res.json();
         hideTyping();
+
+        if (!res.ok) {
+          addBotMessage(`Backend error: ${data.detail || 'Unknown error'}`);
+          return;
+        }
+
         addBotMessage(data.reply);
         conversationHistory.push({ role: 'user', content: text });
         conversationHistory.push({ role: 'assistant', content: data.reply });
       }
+
     } catch {
       hideTyping();
       addBotMessage('⚠️ Could not connect to the backend. Make sure the server is running.');
     }
+
     refreshStats();
   }
 
   async function selectRecipe(index) {
     if (!pendingSuggestions) return;
+
     const recipe = pendingSuggestions[index];
+    if (!recipe) return;
+
     pendingSuggestions = null;
+
     addUserMessage(`I'd like to make: ${recipe.name}`);
     showTyping();
+
     try {
       const res = await fetch(`${API}/api/chat/recipe`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipe_name: recipe.name, history: conversationHistory })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipe_name: recipe.name,
+          history: conversationHistory
+        })
       });
+
       const data = await res.json();
       hideTyping();
+
+      if (!res.ok) {
+        addBotMessage(`Backend error: ${data.detail || 'Unknown error'}`);
+        return;
+      }
+
       addBotMessage(data.recipe);
       conversationHistory.push({ role: 'user', content: `Recipe for ${recipe.name}` });
       conversationHistory.push({ role: 'assistant', content: data.recipe });
-      setTimeout(() => addBotMessage('Did you enjoy the recipe? Rate it with 1–5 stars — just type the number! ⭐'), 1500);
+
     } catch {
       hideTyping();
       addBotMessage('⚠️ Could not load the recipe.');
     }
+
     refreshStats();
   }
 
@@ -1013,17 +1164,200 @@ async function refreshStats() {
   function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
   function escapeHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function renderMarkdown(text) {
-    return text
-      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/^- (.+)$/gm, '<li>$1</li>')
-      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-      .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>')
-      .replace(/^(?!<[hul]|<\/[hul]|<li|<br)(.+)$/gm, '<p>$1</p>');
+  if (!text) return "";
+
+  let html = escapeHtml(text);
+
+  // Convert markdown tables before other formatting
+  html = convertMarkdownTables(html);
+
+  // Headings
+  html = html
+    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.+)$/gm, "<h2>$1</h2>");
+
+  // Bold text
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+  // Horizontal rules like ---
+  html = html.replace(/^---$/gm, "<hr>");
+
+  // Lists
+  html = convertMarkdownLists(html);
+
+  // Paragraphs
+  html = html
+    .split(/\n{2,}/)
+    .map(block => {
+      const trimmed = block.trim();
+
+      if (!trimmed) return "";
+
+      if (
+        trimmed.startsWith("<h2") ||
+        trimmed.startsWith("<h3") ||
+        trimmed.startsWith("<ul") ||
+        trimmed.startsWith("<ol") ||
+        trimmed.startsWith("<table") ||
+        trimmed.startsWith("<div class=\"table-wrapper\"") ||
+        trimmed.startsWith("<hr")
+      ) {
+        return trimmed;
+      }
+
+      return `<p>${trimmed.replace(/\n/g, "<br>")}</p>`;
+    })
+    .join("");
+
+  return html;
+}
+
+function convertMarkdownLists(text) {
+  const lines = text.split("\n");
+  const result = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Numbered list
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items = [];
+
+      while (i < lines.length) {
+        const current = lines[i];
+
+        if (/^\s*\d+\.\s+/.test(current)) {
+          items.push(current.replace(/^\s*\d+\.\s+/, "").trim());
+          i++;
+          continue;
+        }
+
+        if (
+          current.trim() === "" &&
+          i + 1 < lines.length &&
+          /^\s*\d+\.\s+/.test(lines[i + 1])
+        ) {
+          i++;
+          continue;
+        }
+
+        break;
+      }
+
+      result.push(`<ol>${items.map(item => `<li>${item}</li>`).join("")}</ol>`);
+      continue;
+    }
+
+    // Bullet list
+    if (/^\s*-\s+/.test(line)) {
+      const items = [];
+
+      while (i < lines.length) {
+        const current = lines[i];
+
+        if (/^\s*-\s+/.test(current)) {
+          items.push(current.replace(/^\s*-\s+/, "").trim());
+          i++;
+          continue;
+        }
+
+        if (
+          current.trim() === "" &&
+          i + 1 < lines.length &&
+          /^\s*-\s+/.test(lines[i + 1])
+        ) {
+          i++;
+          continue;
+        }
+
+        break;
+      }
+
+      result.push(`<ul>${items.map(item => `<li>${item}</li>`).join("")}</ul>`);
+      continue;
+    }
+
+    result.push(line);
+    i++;
   }
+
+  return result.join("\n");
+}
+
+
+function convertMarkdownTables(text) {
+  const lines = text.split("\n");
+  const result = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    const nextLine = lines[i + 1];
+
+    const isTableStart =
+      line &&
+      nextLine &&
+      line.includes("|") &&
+      nextLine.includes("|") &&
+      /^(\s*\|?\s*:?-{3,}:?\s*)+\|?\s*$/.test(nextLine);
+
+    if (!isTableStart) {
+      result.push(line);
+      i++;
+      continue;
+    }
+
+    const headerLine = line;
+    const separatorLine = nextLine;
+    const bodyLines = [];
+
+    i += 2;
+
+    while (i < lines.length && lines[i].includes("|") && lines[i].trim() !== "") {
+      bodyLines.push(lines[i]);
+      i++;
+    }
+
+    const headers = splitTableRow(headerLine);
+    const rows = bodyLines.map(splitTableRow);
+
+    let tableHtml = '<div class="table-wrapper"><table class="markdown-table"><thead><tr>';
+
+    headers.forEach(header => {
+      tableHtml += `<th>${header}</th>`;
+    });
+
+    tableHtml += "</tr></thead><tbody>";
+
+    rows.forEach(row => {
+      tableHtml += "<tr>";
+
+      headers.forEach((_, index) => {
+        tableHtml += `<td>${row[index] || ""}</td>`;
+      });
+
+      tableHtml += "</tr>";
+    });
+
+    tableHtml += "</tbody></table></div>";
+
+    result.push(tableHtml);
+  }
+
+  return result.join("\n");
+}
+
+
+function splitTableRow(row) {
+  return row
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map(cell => cell.trim());
+}
 
   async function handleImageUpload(input) {
   const file = input.files && input.files[0];
