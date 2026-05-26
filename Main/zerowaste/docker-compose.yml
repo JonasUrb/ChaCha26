@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${API_PORT:-8001}:8000"
+      #http://localhost:8001/
+      #http://localhost:8001/docs
     volumes:
       - "${DATA_DIR:-./data}:/app/data"
       - "./:/app"
