@@ -2,4 +2,11 @@
 data/
 __pycache__/
 *.pyc
-.DS_Store
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+*.egg-info/
+dist/
+build/

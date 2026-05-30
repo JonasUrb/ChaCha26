@@ -1,23 +1,34 @@
-# Dockerfile – ZeroWaste Kitchen Bot Backend
+# Dockerfile – ZeroWaste Kitchen Bot
+# Two services in one container (like AnimalBot):
+#   Port 8000 → FastAPI REST API  (api.py)
+#   Port 8511 → HTML Frontend     (app.py)
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Abhängigkeiten installieren
+# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Backend-Code kopieren
-COPY backend/ ./backend/
+# Copy bot logic, API, UI, and database module
+COPY chatbot/ .
 
-# Frontend-Code kopieren (wird von FastAPI als static files ausgeliefert)
+# Copy the HTML frontend (served by app.py)
 COPY frontend/ ./frontend/
 
-# Daten-Verzeichnis anlegen (wird via Volume überschrieben)
+# Data directory – overridden by a Docker volume in production
 RUN mkdir -p /app/data
 
-# Port freigeben
-EXPOSE 8000
+# Non-root user for security (mirrors AnimalBot)
+RUN useradd -m dev && \
+    chown -R dev:dev /app && \
+    chmod +x start.sh
 
-# Server starten
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+USER dev
+
+ENV PYTHONUNBUFFERED=1
+
+# API port + UI port
+EXPOSE 8000 8511
+
+CMD ["sh", "start.sh"]

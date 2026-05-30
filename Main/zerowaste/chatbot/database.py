@@ -2,14 +2,17 @@
 database.py – SQLite database module for the ZeroWaste Kitchen Bot
 Tables:
   - inventory       : Pantry list with quantity, unit, and best-before date
-  - recipes_history : Cooked recipes + rating (for Evaluation Milestone 2)
+  - recipes_history : Cooked recipes + rating
   - allergies       : User's saved allergies and intolerances
 """
 
+import os
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "data" / "zerowaste.db"
+# Configurable via DATA_DIR env var; defaults to /app/data for Docker
+_data_dir = os.environ.get("DATA_DIR", "/app/data")
+DB_PATH = Path(_data_dir) / "zerowaste.db"
 
 
 def get_connection() -> sqlite3.Connection:
@@ -52,10 +55,6 @@ def init_db():
 # ─── Inventory CRUD ───────────────────────────────────────────────────────────
 
 def add_ingredient(name: str, menge: float, einheit: str, haltbar_bis: str) -> bool:
-    """
-    Adds an ingredient to the pantry. All fields are required.
-    Returns True if new, False if already exists.
-    """
     try:
         with get_connection() as conn:
             conn.execute(
@@ -68,7 +67,6 @@ def add_ingredient(name: str, menge: float, einheit: str, haltbar_bis: str) -> b
 
 
 def remove_ingredient(name: str) -> bool:
-    """Removes an ingredient (partial match). Returns True if found."""
     with get_connection() as conn:
         result = conn.execute(
             "DELETE FROM inventory WHERE name LIKE ?",
@@ -78,7 +76,6 @@ def remove_ingredient(name: str) -> bool:
 
 
 def get_all_ingredients() -> list[dict]:
-    """Returns all pantry ingredients as a list."""
     with get_connection() as conn:
         rows = conn.execute(
             "SELECT * FROM inventory ORDER BY haltbar_bis ASC, name ASC"
@@ -87,7 +84,6 @@ def get_all_ingredients() -> list[dict]:
 
 
 def get_expiring_soon(days: int = 3) -> list[dict]:
-    """Returns ingredients expiring within the given number of days."""
     with get_connection() as conn:
         rows = conn.execute(
             """SELECT * FROM inventory
@@ -100,7 +96,6 @@ def get_expiring_soon(days: int = 3) -> list[dict]:
 
 
 def update_expiry(name: str, haltbar_bis: str) -> bool:
-    """Updates the best-before date of an ingredient."""
     with get_connection() as conn:
         result = conn.execute(
             "UPDATE inventory SET haltbar_bis = ? WHERE name LIKE ?",
@@ -112,10 +107,6 @@ def update_expiry(name: str, haltbar_bis: str) -> bool:
 # ─── Allergy CRUD ─────────────────────────────────────────────────────────────
 
 def add_allergy(name: str) -> bool:
-    """
-    Adds an allergy or intolerance.
-    Returns True if new, False if already exists.
-    """
     try:
         with get_connection() as conn:
             conn.execute(
@@ -128,7 +119,6 @@ def add_allergy(name: str) -> bool:
 
 
 def remove_allergy(name: str) -> bool:
-    """Removes an allergy. Returns True if found."""
     with get_connection() as conn:
         result = conn.execute(
             "DELETE FROM allergies WHERE name LIKE ?",
@@ -138,7 +128,6 @@ def remove_allergy(name: str) -> bool:
 
 
 def get_all_allergies() -> list[dict]:
-    """Returns all saved allergies."""
     with get_connection() as conn:
         rows = conn.execute(
             "SELECT * FROM allergies ORDER BY name ASC"
@@ -147,14 +136,12 @@ def get_all_allergies() -> list[dict]:
 
 
 def get_allergy_names() -> list[str]:
-    """Returns only the allergy names (used for prompt injection)."""
     return [a["name"] for a in get_all_allergies()]
 
 
 # ─── Recipe History ───────────────────────────────────────────────────────────
 
 def save_recipe(rezept_name: str, zutaten: list[str] = None):
-    """Saves a cooked recipe to the history."""
     with get_connection() as conn:
         conn.execute(
             "INSERT INTO recipes_history (rezept_name, zutaten) VALUES (?, ?)",
@@ -163,7 +150,6 @@ def save_recipe(rezept_name: str, zutaten: list[str] = None):
 
 
 def rate_last_recipe(bewertung: int, notiz: str = None):
-    """Rates the most recently cooked recipe."""
     with get_connection() as conn:
         conn.execute(
             """UPDATE recipes_history SET bewertung = ?, notiz = ?
@@ -173,7 +159,6 @@ def rate_last_recipe(bewertung: int, notiz: str = None):
 
 
 def get_recipe_history(limit: int = 10) -> list[dict]:
-    """Returns the most recently cooked recipes."""
     with get_connection() as conn:
         rows = conn.execute(
             "SELECT * FROM recipes_history ORDER BY gekocht_am DESC LIMIT ?",
@@ -183,14 +168,12 @@ def get_recipe_history(limit: int = 10) -> list[dict]:
 
 
 def get_stats() -> dict:
-    """Returns impact statistics for the stats widget."""
     with get_connection() as conn:
         total_cooked = conn.execute("SELECT COUNT(*) FROM recipes_history").fetchone()[0]
         avg_rating = conn.execute(
             "SELECT AVG(bewertung) FROM recipes_history WHERE bewertung IS NOT NULL"
         ).fetchone()[0]
         ingredients_saved = conn.execute("SELECT COUNT(*) FROM inventory").fetchone()[0]
-
     return {
         "rezepte_gekocht": total_cooked,
         "durchschnittsbewertung": round(avg_rating, 1) if avg_rating else None,
