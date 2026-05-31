@@ -7,16 +7,16 @@ services:
     ports:
       - "${API_PORT:-8001}:8000"   # REST API   →  http://localhost:8001/api/...
                                    # API docs   →  http://localhost:8001/docs
-      - "${UI_PORT:-8511}:8511"    # Frontend   →  http://localhost:8511/
-      #http://localhost:8511/ zum starten der app local, http://localhost:8511/docs für die API-Dokumentation
+      - "${UI_PORT:-8511}:8501"    # Frontend   →  http://localhost:8511/
+      # http://localhost:8511/ zum Starten der App lokal, http://localhost:8001/docs für die API-Dokumentation
     volumes:
       - "${DATA_DIR:-./data}:/app/data"   # SQLite DB + conversation.jsonp logs
       - "./chatbot:/app"                   # live-reload chatbot code in dev
       - "./frontend:/app/frontend"         # live-reload frontend in dev
     environment:
-      - ACADEMIC_CLOUD_API_KEY=${ACADEMIC_CLOUD_API_KEY}
+      - ACADEMIC_CLOUD_API_KEY=7f77f99acf0c2a6ee146e1a173fd0b84
       - ACADEMIC_CLOUD_BASE_URL=${ACADEMIC_CLOUD_BASE_URL:-https://chat-ai.academiccloud.de/v1}
-      - LLM_MODEL=${LLM_MODEL:-meta-llama-3.1-8b-instruct}
+      - LLM_MODEL=${LLM_MODEL:-qwen3-30b-a3b-instruct-2507}
       - API_BASE_URL=${API_BASE_URL:-http://localhost}
       - API_PORT=${API_PORT:-8001}
       - UI_PORT=${UI_PORT:-8511}

@@ -1,7 +1,7 @@
 # Dockerfile – ZeroWaste Kitchen Bot
 # Two services in one container (like AnimalBot):
 #   Port 8000 → FastAPI REST API  (api.py)
-#   Port 8511 → HTML Frontend     (app.py)
+#   Port 8501 → HTML Frontend     (app.py)
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -29,6 +29,6 @@ USER dev
 ENV PYTHONUNBUFFERED=1
 
 # API port + UI port
-EXPOSE 8000 8511
+EXPOSE 8000 8501
 
 CMD ["sh", "start.sh"]
