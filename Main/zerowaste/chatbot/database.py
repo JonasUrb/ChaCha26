@@ -1,9 +1,10 @@
 """
 database.py – SQLite database module for the ZeroWaste Kitchen Bot
 Tables:
-  - inventory       : Pantry list with quantity, unit, and best-before date
-  - recipes_history : Cooked recipes + rating
-  - allergies       : User's saved allergies and intolerances
+  - inventory         : Pantry list with quantity, unit, and best-before date
+  - recipes_history   : Cooked recipes + rating
+  - allergies         : User's saved allergies and intolerances
+  - diet_preferences  : User's saved diet types (vegan, vegetarian, halal, ...)
 """
 
 import os
@@ -49,6 +50,12 @@ def init_db():
                 name         TEXT NOT NULL UNIQUE,
                 hinzugefuegt TEXT DEFAULT (date('now'))
             );
+
+            CREATE TABLE IF NOT EXISTS diet_preferences (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                name         TEXT NOT NULL UNIQUE,
+                hinzugefuegt TEXT DEFAULT (date('now'))
+            );
         """)
 
 
@@ -84,11 +91,18 @@ def get_all_ingredients() -> list[dict]:
 
 
 def get_expiring_soon(days: int = 3) -> list[dict]:
+    """
+    Returns ingredients expiring within `days` days, including a precise
+    `days_left` integer (0 = today, 1 = tomorrow, ...) so the UI/agent can
+    explain *why* an ingredient is being prioritized instead of just showing
+    a raw date.
+    """
     with get_connection() as conn:
         rows = conn.execute(
-            """SELECT * FROM inventory
+            """SELECT *,
+                      CAST(julianday(date(haltbar_bis)) - julianday(date('now')) AS INTEGER) AS days_left
+               FROM inventory
                WHERE date(haltbar_bis) <= date('now', ? || ' days')
-               AND date(haltbar_bis) >= date('now')
                ORDER BY haltbar_bis ASC""",
             (str(days),)
         ).fetchall()
@@ -137,6 +151,41 @@ def get_all_allergies() -> list[dict]:
 
 def get_allergy_names() -> list[str]:
     return [a["name"] for a in get_all_allergies()]
+
+
+# ─── Diet preference CRUD ─────────────────────────────────────────────────────
+
+def add_diet_preference(name: str) -> bool:
+    try:
+        with get_connection() as conn:
+            conn.execute(
+                "INSERT INTO diet_preferences (name) VALUES (?)",
+                (name.strip().capitalize(),)
+            )
+        return True
+    except sqlite3.IntegrityError:
+        return False
+
+
+def remove_diet_preference(name: str) -> bool:
+    with get_connection() as conn:
+        result = conn.execute(
+            "DELETE FROM diet_preferences WHERE name LIKE ?",
+            (f"%{name.strip()}%",)
+        )
+        return result.rowcount > 0
+
+
+def get_all_diet_preferences() -> list[dict]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            "SELECT * FROM diet_preferences ORDER BY name ASC"
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def get_diet_preference_names() -> list[str]:
+    return [d["name"] for d in get_all_diet_preferences()]
 
 
 # ─── Recipe History ───────────────────────────────────────────────────────────

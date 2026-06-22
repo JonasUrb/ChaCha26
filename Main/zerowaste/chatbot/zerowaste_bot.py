@@ -33,8 +33,14 @@ You can:
 - prioritize ingredients that are about to expire
 - explain food shelf life
 - explain the difference between best-before dates and use-by dates
-- consider allergies and intolerances
+- consider allergies, intolerances, and diet preferences
 - give practical tips for using leftovers
+
+Response style (always follow this):
+- Be concise and easy to skim. Prefer short paragraphs and bullet points over long blocks of text.
+- Only include a section (tips, sustainability note, etc.) if it adds real value for this specific message — do not pad responses with extra sections "just in case".
+- Get to the point in the first sentence; do not start with long introductions or repeat the user's question back to them.
+- Aim for the shortest response that fully answers the question.
 
 Rules:
 - The application language is English.
@@ -51,15 +57,19 @@ Rules:
 - Do not casually suggest throwing food away.
 - Do not create unnecessary fear around food safety.
 - When food safety is involved, be careful and responsible.
-- If there are clear warning signs such as mold, bad smell, slimy texture, unusual color, damaged packaging, or unsafe storage, clearly warn the user.
-- For high-risk foods such as meat, fish, seafood, raw eggs, dairy, and prepared meals, be extra careful.
+
+Important — you cannot see or smell the user's food:
+- You are working from the user's description only; you cannot inspect the food yourself.
+- Never state with certainty that a specific item "is fine" or "is bad" based on the date alone. Frame food-safety conclusions as guidance based on what the user described ("based on what you've described, it sounds...", "this suggests...", "if it also passes the smell/texture check, it's likely fine").
+- If there are clear warning signs the user mentions, such as mold, bad smell, slimy texture, unusual color, damaged packaging, or unsafe storage, warn clearly and directly — certainty is appropriate there.
+- For high-risk foods such as meat, fish, seafood, raw eggs, dairy, and prepared meals, be extra careful and slightly more cautious in tone.
 - Explain the difference between "best-before" and "use-by" dates in a simple way when relevant.
-- If the food is past a best-before date but looks, smells, and tastes normal, explain that it may still be usable depending on the food type.
-- If the food is past a use-by date, explain that the user should be more cautious, especially with high-risk foods.
-- Explain briefly why certain ingredients should be used first.
+- If the food is past a best-before date but the user describes it as looking, smelling, and tasting normal, explain that it may still be usable depending on the food type — without guaranteeing it.
+- If the food is past a use-by date, recommend extra caution, especially for high-risk foods.
+- When you tell the user to use an ingredient soon, briefly say why (e.g. "best-before date is closest" or "this is the most perishable item").
 - Suggest realistic recipes that people would actually cook.
-- Mention food waste reduction and sustainability when relevant.
-{allergy_block}
+- Mention food waste reduction and sustainability only when it genuinely adds something new, not as a default closing line.
+{allergy_block}{diet_block}
 """
 
 SUGGESTION_PROMPT_BASE = """
@@ -67,11 +77,11 @@ You are a professional chef with 20 years of experience. Your task is to suggest
 
 STRICT RULES — follow every one without exception:
 1. CULINARY SANITY: Only suggest dishes that are genuinely delicious and would be served in a real restaurant or home kitchen. Never combine ingredients that don't belong together.
-2. BASICS ARE ALWAYS AVAILABLE: Assume the user always has salt, pepper, oil, butter, garlic, onions, and water — even if not listed in the pantry.
+2. BASICS ARE ALWAYS AVAILABLE: Assume the user always has salt, pepper, oil, butter, garlic, onions, and water — even if not listed in the pantry. State this assumption nowhere in the output (it's implicit), but never mark these basics as "(buy if needed)".
 3. USER WISH IS HIGHEST PRIORITY: If the user expresses a specific craving or preference, ALL 3 suggestions must match that wish exactly.
 4. MISSING INGREDIENTS: If a key ingredient for the requested dish isn't in the pantry, you may still suggest the dish — mark missing items with "(buy if needed)" in the ingredients list.
 5. EXPIRY FIRST: Prioritize ingredients that expire soonest, visible from the [BBD: date] tag in the pantry.
-6. VARIETY: The 3 dishes must be meaningfully different from each other.
+6. REAL VARIETY: The 3 dishes must differ meaningfully from each other in at least two of: cuisine style, main protein/vegetable, and cooking method (e.g. not three pasta dishes, not three pan-fried dishes). Do not repeat the same sauce or base across suggestions.
 7. QUALITY OVER QUANTITY: Each suggestion should feel appealing and appetizing.
 
 Respond ONLY with raw JSON — no backticks, no explanation, no comments:
@@ -83,14 +93,17 @@ Respond ONLY with raw JSON — no backticks, no explanation, no comments:
   ]
 }}
 Difficulty must be exactly one of: "easy", "medium", "advanced".
-{allergy_block}
+{allergy_block}{diet_block}
 """
 
 RECIPE_PROMPT_BASE = """
 You are a professional chef. Write a complete, well-structured, and genuinely delicious recipe in English.
 The recipe must be realistic and practical — exactly as it would appear in a high-quality cookbook.
 You may always use salt, pepper, oil, butter, and other basic pantry staples even if not listed in the inventory.
-Be specific with quantities, temperatures, and timings. Use sensory language to make the recipe inviting.
+Be specific with quantities, temperatures, and timings. Use sensory language, but keep it tight — no filler sentences.
+
+Keep the whole recipe skimmable: short lines, no long paragraphs. Only include "Tips", "Sustainability Note" and
+"Use First" if you have something genuinely useful and specific to say — one short sentence each, not a paragraph.
 
 Use this exact Markdown format:
 
@@ -104,16 +117,32 @@ Use this exact Markdown format:
 ### 👨‍🍳 Instructions
 1. Step...
 
-### 💡 Tips & Variations
-One or two practical tips to improve or vary the dish.
-
-### 🌱 Sustainability Note
-A short, specific tip related to food waste reduction and SDG 12.
+### 💡 Tip
+One short, concrete tip (skip this section if there's nothing specific to add).
 
 ### ⚠️ Use First
-Which pantry ingredients should be used up soon and why.
+One short sentence: which pantry ingredient should be used up soon and why (skip if nothing is close to expiring).
 
-{allergy_block}
+{allergy_block}{diet_block}
+"""
+
+SHOPPING_LIST_PROMPT_BASE = """
+You are a practical, budget-conscious kitchen assistant. Create a short, low-waste shopping list based on the user's
+current pantry.
+
+Be explicit about your assumptions so the user understands the logic — but keep this brief (1 short line), not a
+disclaimer paragraph.
+
+Rules:
+1. State your assumption up front in one line, e.g. "Assuming you want to round out meals for the next few days using what you already have:".
+2. Suggest 4–8 items, grouped loosely if helpful (e.g. produce, pantry staples, proteins) — only group if there are enough items to justify it.
+3. VARY the suggestions: do not default to the same generic staples every time. Base items on what's actually missing
+   to complement the current pantry (e.g. if pantry has pasta + tomatoes but no cheese, suggest cheese; if it has
+   rice + veg but no protein, suggest a protein).
+4. For each item, give a very short reason (max ~6 words), e.g. "– pairs with your tomatoes".
+5. Skip items the user already has in the pantry.
+6. Keep total response short: assumption line + list. No long intro, no closing summary paragraph.
+{allergy_block}{diet_block}
 """
 
 IMAGE_ANALYSIS_PROMPT = """
@@ -128,8 +157,9 @@ Rules:
 - List only ingredients you can reasonably see.
 - If something is uncertain, mark it as "possibly".
 - Do not invent ingredients.
+- You are assessing the image only, not the real food in hand — avoid stating freshness with certainty; phrase it as "looks like" / "appears to be".
 - Suggest which visible ingredients should be used first if they look perishable.
-- Mention food waste reduction when relevant.
+- Keep the response short and skimmable; only mention sustainability if it adds something specific.
 """
 
 
@@ -163,6 +193,18 @@ class ZeroWasteAgent:
             "- Always suggest allergen-free alternatives where possible.\n"
         )
 
+    def _build_diet_block(self, diet_preferences: list) -> str:
+        if not diet_preferences:
+            return ""
+        names = [d["name"] if isinstance(d, dict) else d for d in diet_preferences]
+        diet_list = ", ".join(names)
+        return (
+            f"\n🥗 USER DIET PREFERENCE(S): {diet_list}\n"
+            "- Every suggestion and recipe MUST comply with these diet preferences (e.g. a vegan request means no meat, fish, dairy, eggs or honey; halal means no pork or alcohol and only halal-compatible proteins; vegetarian means no meat or fish).\n"
+            "- If pantry ingredients conflict with the diet preference, leave them out or suggest a compliant substitute instead.\n"
+            "- Do not silently ignore the diet preference even if it makes a request harder to fulfill with the current pantry.\n"
+        )
+
     def _format_inventory(self, ingredients: list) -> str:
         if not ingredients:
             return "(pantry is empty)"
@@ -172,7 +214,7 @@ class ZeroWasteAgent:
             lines.append(line)
         return ", ".join(lines)
 
-    def _build_context(self, ingredients: list, allergies: list) -> str:
+    def _build_context(self, ingredients: list, allergies: list, diet_preferences: list = None) -> str:
         ingredient_lines = []
         for item in ingredients:
             line = f"- {item.get('name')}"
@@ -189,7 +231,16 @@ class ZeroWasteAgent:
         else:
             allergy_text = "No allergies or intolerances provided."
 
-        return f"\nCurrent ingredients:\n{ingredient_text}\n\nAllergies / intolerances:\n{allergy_text}\n"
+        if diet_preferences:
+            diet_text = ", ".join([d["name"] if isinstance(d, dict) else d for d in diet_preferences])
+        else:
+            diet_text = "No diet preference set."
+
+        return (
+            f"\nCurrent ingredients:\n{ingredient_text}\n\n"
+            f"Allergies / intolerances:\n{allergy_text}\n\n"
+            f"Diet preference:\n{diet_text}\n"
+        )
 
     def _parse_suggestions(self, raw: str) -> dict:
         cleaned = raw.strip().replace("```json", "").replace("```", "").strip()
@@ -207,13 +258,14 @@ class ZeroWasteAgent:
 
     # ── Public methods ────────────────────────────────────────────────────
 
-    def get_suggestions(self, user_wish: str, ingredients: list, allergies: list):
+    def get_suggestions(self, user_wish: str, ingredients: list, allergies: list, diet_preferences: list = None):
         """
         Suggest 3 recipes based on pantry and optional user wish.
         Returns (suggestions_list, log_message).
         """
         inventory_str = self._format_inventory(ingredients)
         allergy_block = self._build_allergy_block(allergies)
+        diet_block = self._build_diet_block(diet_preferences)
 
         if user_wish:
             prompt = (
@@ -230,7 +282,7 @@ class ZeroWasteAgent:
         response = self.client.chat.completions.create(
             model=LLM_MODEL,
             messages=[
-                {"role": "system", "content": SUGGESTION_PROMPT_BASE.format(allergy_block=allergy_block)},
+                {"role": "system", "content": SUGGESTION_PROMPT_BASE.format(allergy_block=allergy_block, diet_block=diet_block)},
                 {"role": "user", "content": prompt},
             ],
             max_tokens=900,
@@ -252,13 +304,14 @@ class ZeroWasteAgent:
 
         return suggestions, log_message
 
-    def get_recipe(self, recipe_name: str, history: list, ingredients: list, allergies: list):
+    def get_recipe(self, recipe_name: str, history: list, ingredients: list, allergies: list, diet_preferences: list = None):
         """
         Generate a full recipe for a named dish.
         Returns (recipe_text, log_message).
         """
         inventory_str = self._format_inventory(ingredients)
         allergy_block = self._build_allergy_block(allergies)
+        diet_block = self._build_diet_block(diet_preferences)
 
         prompt = (
             f"Pantry: {inventory_str}\n\n"
@@ -269,7 +322,7 @@ class ZeroWasteAgent:
         response = self.client.chat.completions.create(
             model=LLM_MODEL,
             messages=[
-                {"role": "system", "content": RECIPE_PROMPT_BASE.format(allergy_block=allergy_block)},
+                {"role": "system", "content": RECIPE_PROMPT_BASE.format(allergy_block=allergy_block, diet_block=diet_block)},
                 *history[-4:],
                 {"role": "user", "content": prompt},
             ],
@@ -289,14 +342,52 @@ class ZeroWasteAgent:
 
         return recipe_text, log_message
 
-    def chat_message(self, message: str, history: list, ingredients: list, allergies: list):
+    def get_shopping_list(self, user_wish: str, ingredients: list, allergies: list, diet_preferences: list = None):
+        """
+        Generate a short, low-waste shopping list based on the pantry, with
+        clear stated assumptions and varied, pantry-aware suggestions.
+        Returns (reply_text, log_message).
+        """
+        inventory_str = self._format_inventory(ingredients)
+        allergy_block = self._build_allergy_block(allergies)
+        diet_block = self._build_diet_block(diet_preferences)
+
+        prompt = (
+            f"Pantry: {inventory_str}\n\n"
+            f"User request: {user_wish or 'Suggest a shopping list to complement my pantry.'}"
+        )
+
+        response = self.client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[
+                {"role": "system", "content": SHOPPING_LIST_PROMPT_BASE.format(allergy_block=allergy_block, diet_block=diet_block)},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=500,
+            temperature=0.7,
+        )
+
+        reply = response.choices[0].message.content.strip()
+
+        log_message = {
+            "type": "shopping_list",
+            "user_wish": user_wish,
+            "inventory": inventory_str,
+            "chatbot_response": reply,
+            "model": LLM_MODEL,
+        }
+
+        return reply, log_message
+
+    def chat_message(self, message: str, history: list, ingredients: list, allergies: list, diet_preferences: list = None):
         """
         Handle a general chat message.
         Returns (reply_text, log_message).
         """
         allergy_block = self._build_allergy_block(allergies)
-        system_prompt = SYSTEM_PROMPT_BASE.format(allergy_block=allergy_block)
-        context = self._build_context(ingredients, allergies)
+        diet_block = self._build_diet_block(diet_preferences)
+        system_prompt = SYSTEM_PROMPT_BASE.format(allergy_block=allergy_block, diet_block=diet_block)
+        context = self._build_context(ingredients, allergies, diet_preferences)
         inventory_str = self._format_inventory(ingredients)
 
         messages = [
@@ -310,7 +401,7 @@ class ZeroWasteAgent:
             model=LLM_MODEL,
             messages=messages,
             temperature=0.7,
-            max_tokens=1000,
+            max_tokens=700,
         )
 
         reply = response.choices[0].message.content.strip()
@@ -352,7 +443,7 @@ class ZeroWasteAgent:
                 },
             ],
             temperature=0.4,
-            max_tokens=1000,
+            max_tokens=700,
         )
 
         reply = response.choices[0].message.content.strip()
@@ -428,8 +519,9 @@ if __name__ == "__main__":
 
         ingredients = db.get_all_ingredients()
         allergies = db.get_all_allergies()
+        diet_preferences = db.get_all_diet_preferences()
 
-        reply, log = agent.chat_message(user_input, history, ingredients, allergies)
+        reply, log = agent.chat_message(user_input, history, ingredients, allergies, diet_preferences)
         print(f"Bot: {reply}\n")
 
         history.append({"role": "user", "content": user_input})

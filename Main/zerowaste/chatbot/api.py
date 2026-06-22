@@ -65,6 +65,12 @@ class AllergyAdd(BaseModel):
 class AllergyRemove(BaseModel):
     name: str
 
+class DietAdd(BaseModel):
+    name: str
+
+class DietRemove(BaseModel):
+    name: str
+
 @app.get("/")
 async def root():
     return {"message": "ZeroWaste Kitchen Bot API is running!", "docs": "/docs"}
@@ -129,6 +135,26 @@ async def remove_allergy(item: AllergyRemove):
         raise HTTPException(status_code=404, detail=f"'{item.name}' not found.")
     return {"success": True, "message": f"✅ Allergy '{item.name}' removed.", "allergies": db.get_all_allergies()}
 
+# ─── Diet preference endpoints ────────────────────────────────────────────────
+
+@app.get("/api/diets")
+async def get_diets():
+    return {"diets": db.get_all_diet_preferences()}
+
+@app.post("/api/diets/add")
+async def add_diet(item: DietAdd):
+    added = db.add_diet_preference(item.name)
+    if not added:
+        raise HTTPException(status_code=409, detail=f"'{item.name}' is already saved.")
+    return {"success": True, "message": f"🥗 Diet preference '{item.name}' saved.", "diets": db.get_all_diet_preferences()}
+
+@app.delete("/api/diets/remove")
+async def remove_diet(item: DietRemove):
+    removed = db.remove_diet_preference(item.name)
+    if not removed:
+        raise HTTPException(status_code=404, detail=f"'{item.name}' not found.")
+    return {"success": True, "message": f"✅ Diet preference '{item.name}' removed.", "diets": db.get_all_diet_preferences()}
+
 # ─── Chat endpoints ───────────────────────────────────────────────────────────
 
 @app.post("/api/chat/suggest")
@@ -137,7 +163,8 @@ async def suggest_recipes(req: ChatMessage):
     try:
         ingredients = db.get_all_ingredients()
         allergies   = db.get_all_allergies()
-        suggestions, log = agent.get_suggestions(req.message, ingredients, allergies)
+        diets       = db.get_all_diet_preferences()
+        suggestions, log = agent.get_suggestions(req.message, ingredients, allergies, diets)
         log_writer.write(log)
         if not suggestions:
             raise HTTPException(status_code=500, detail="No suggestions returned by model.")
@@ -153,10 +180,24 @@ async def get_recipe(req: RecipeRequest):
     try:
         ingredients = db.get_all_ingredients()
         allergies   = db.get_all_allergies()
-        recipe_text, log = agent.get_recipe(req.recipe_name, req.history, ingredients, allergies)
+        diets       = db.get_all_diet_preferences()
+        recipe_text, log = agent.get_recipe(req.recipe_name, req.history, ingredients, allergies, diets)
         log_writer.write(log)
         db.save_recipe(req.recipe_name)
         return {"recipe": recipe_text, "recipe_name": req.recipe_name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/chat/shopping-list")
+async def get_shopping_list(req: ChatMessage):
+    """Generate a short, low-waste shopping list based on the pantry."""
+    try:
+        ingredients = db.get_all_ingredients()
+        allergies   = db.get_all_allergies()
+        diets       = db.get_all_diet_preferences()
+        reply, log = agent.get_shopping_list(req.message, ingredients, allergies, diets)
+        log_writer.write(log)
+        return {"reply": reply}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -166,8 +207,9 @@ async def chat(req: ChatMessage):
     try:
         ingredients = db.get_all_ingredients()
         allergies   = db.get_all_allergies()
+        diets       = db.get_all_diet_preferences()
         context_message = f"[Current pantry: {', '.join(i['name'] for i in ingredients) or 'empty'}]\n\n{req.message}"
-        reply, log = agent.chat_message(context_message, req.history, ingredients, allergies)
+        reply, log = agent.chat_message(context_message, req.history, ingredients, allergies, diets)
         log_writer.write(log)
         return {"reply": reply}
     except Exception as e:

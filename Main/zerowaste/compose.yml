@@ -14,7 +14,7 @@ services:
       - "./chatbot:/app"                   # live-reload chatbot code in dev
       - "./frontend:/app/frontend"         # live-reload frontend in dev
     environment:
-      - ACADEMIC_CLOUD_API_KEY=7f77f99acf0c2a6ee146e1a173fd0b84
+      - ACADEMIC_CLOUD_API_KEY=90718c8494d63cf613bd4a4d62534b3b
       - ACADEMIC_CLOUD_BASE_URL=${ACADEMIC_CLOUD_BASE_URL:-https://chat-ai.academiccloud.de/v1}
       - LLM_MODEL=${LLM_MODEL:-qwen3-30b-a3b-instruct-2507}
       - API_BASE_URL=${API_BASE_URL:-http://localhost}

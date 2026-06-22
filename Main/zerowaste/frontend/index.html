@@ -38,6 +38,7 @@
     .app.sidebar-collapsed .sidebar-nav,
     .app.sidebar-collapsed .sidebar-inventory,
     .app.sidebar-collapsed .sidebar-allergies,
+    .app.sidebar-collapsed .sidebar-diets,
     .app.sidebar-collapsed .impact-widget { display: none; }
     .app.sidebar-collapsed .sidebar-toggle { position: absolute; top: 14px; right: 12px; }
 
@@ -206,6 +207,85 @@
     }
     .allergy-tag-remove:hover { color: rgba(255,120,100,0.9); }
     .empty-allergies { font-size: 11px; color: rgba(255,255,255,0.3); text-align: center; padding: 6px 0; }
+
+    /* ─── Diet Preferences Panel ──────────────────────────────────────── */
+    .sidebar-diets {
+      padding: 0 12px 14px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin-top: 4px;
+    }
+    .diets-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 2px 8px;
+    }
+    .diets-header span {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.45);
+    }
+
+    .diet-chips {
+      display: flex; flex-wrap: wrap; gap: 5px;
+      margin-bottom: 8px;
+    }
+    .diet-chip-btn {
+      padding: 3px 9px; border-radius: 20px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: transparent; color: rgba(255,255,255,0.55);
+      font-size: 11px; font-family: var(--font-body);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .diet-chip-btn:hover {
+      border-color: rgba(150,210,170,0.6);
+      color: #cdeed8;
+    }
+    .diet-chip-btn.active {
+      background: rgba(93,148,112,0.4);
+      border-color: var(--green-mid);
+      color: #e3f7ea;
+    }
+
+    .add-diet-form { display: flex; gap: 6px; }
+    .add-diet-form input {
+      flex: 1; padding: 6px 10px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: #fff; font-size: 12px; font-family: var(--font-body);
+      outline: none;
+    }
+    .add-diet-form input::placeholder { color: rgba(255,255,255,0.35); }
+    .add-diet-form input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.15); }
+    .btn-add-diet {
+      padding: 6px 10px;
+      background: rgba(93,148,112,0.45);
+      border: none; border-radius: 8px;
+      color: #e3f7ea; font-size: 14px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-add-diet:hover { background: rgba(93,148,112,0.65); }
+
+    .diet-list {
+      list-style: none; display: flex; flex-direction: column; gap: 3px;
+      margin-top: 7px; max-height: 90px; overflow-y: auto;
+    }
+    .diet-list::-webkit-scrollbar { width: 3px; }
+    .diet-list::-webkit-scrollbar-thumb { background: rgba(150,210,170,0.2); border-radius: 4px; }
+    .diet-tag {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 10px;
+      background: rgba(93,148,112,0.25);
+      border-left: 2px solid var(--green-mid);
+      border-radius: 6px;
+      font-size: 12px; color: #e3f7ea;
+      animation: fadeIn 0.2s ease;
+    }
+    .diet-tag-remove {
+      background: none; border: none; cursor: pointer;
+      color: rgba(220,240,225,0.4); font-size: 13px;
+      line-height: 1; padding: 0 2px; transition: color 0.15s;
+    }
+    .diet-tag-remove:hover { color: rgba(255,120,100,0.9); }
+    .empty-diets { font-size: 11px; color: rgba(255,255,255,0.3); text-align: center; padding: 6px 0; }
 
     /* ─── Impact Widget ──────────────────────────────────────────────── */
     .impact-widget { margin: 0 12px 20px; background: rgba(255,255,255,0.10); border-radius: var(--radius-sm); padding: 14px 16px; }
@@ -425,7 +505,7 @@
       </button>
     </nav>
 
-    <!-- Scrollable section: pantry + allergies -->
+    <!-- Scrollable section: pantry + allergies + diet -->
     <div class="sidebar-scroll">
 
       <!-- My Pantry -->
@@ -470,6 +550,35 @@
         <!-- Active allergies list -->
         <ul class="allergy-list" id="allergyList">
           <li class="empty-allergies">No allergies saved.</li>
+        </ul>
+      </div>
+
+      <!-- Diet Preferences -->
+      <div class="sidebar-diets">
+        <div class="diets-header">
+          <span>🥗 Diet Preferences</span>
+        </div>
+
+        <!-- Quick-select common diets -->
+        <div class="diet-chips">
+          <button class="diet-chip-btn" onclick="toggleCommonDiet(this, 'Vegan')">Vegan</button>
+          <button class="diet-chip-btn" onclick="toggleCommonDiet(this, 'Vegetarian')">Vegetarian</button>
+          <button class="diet-chip-btn" onclick="toggleCommonDiet(this, 'Halal')">Halal</button>
+          <button class="diet-chip-btn" onclick="toggleCommonDiet(this, 'Kosher')">Kosher</button>
+          <button class="diet-chip-btn" onclick="toggleCommonDiet(this, 'Pescatarian')">Pescatarian</button>
+          <button class="diet-chip-btn" onclick="toggleCommonDiet(this, 'Low-carb')">Low-carb</button>
+        </div>
+
+        <!-- Custom diet input -->
+        <div class="add-diet-form">
+          <input type="text" id="newDiet" placeholder="Other preference..."
+            onkeydown="if(event.key==='Enter') addCustomDiet()" />
+          <button class="btn-add-diet" onclick="addCustomDiet()" title="Add">+</button>
+        </div>
+
+        <!-- Active diet tags list -->
+        <ul class="diet-list" id="dietList">
+          <li class="empty-diets">No diet preference set.</li>
         </ul>
       </div>
 
@@ -603,17 +712,12 @@
   document.addEventListener('DOMContentLoaded', () => {
     loadInventory();
     loadAllergies();
+    loadDiets();
     refreshStats();
     document.getElementById('modalHaltbarkeit').min = new Date().toISOString().split('T')[0];
     addBotMessage(`## 🌿 Welcome to the Food Rescue Bot!
 
-I'm here to help you use up your ingredients and reduce food waste.
-
-**Here's how it works:**
-- Add ingredients to your pantry on the left
-- Set your allergies & intolerances once in the sidebar — I'll always respect them
-- Ask me for recipe ideas or use the quick actions below
-- I always prioritize ingredients that are expiring soon! 🥦
+Add ingredients on the left, set allergies & diet preferences once, and I'll always respect them.
 
 What would you like to cook today?`);
   });
@@ -849,22 +953,104 @@ What would you like to cook today?`);
     } catch { console.warn('Offline'); }
   }
 
+  // ─── Diet Preferences ────────────────────────────────────────────
+  const COMMON_DIETS = ['Vegan','Vegetarian','Halal','Kosher','Pescatarian','Low-carb'];
+
+  async function loadDiets() {
+    try {
+      const res = await fetch(`${API}/api/diets`);
+      const data = await res.json();
+      renderDiets(data.diets || []);
+      COMMON_DIETS.forEach(name => {
+        const active = (data.diets || []).some(d => d.name.toLowerCase() === name.toLowerCase());
+        document.querySelectorAll('.diet-chip-btn').forEach(btn => {
+          if (btn.textContent === name) btn.classList.toggle('active', active);
+        });
+      });
+    } catch { console.warn('Could not load diet preferences.'); }
+  }
+
+  function renderDiets(items) {
+    const list = document.getElementById('dietList');
+    if (items.length === 0) { list.innerHTML = '<li class="empty-diets">No diet preference set.</li>'; return; }
+    list.innerHTML = items.map(d => `
+      <li class="diet-tag">
+        <span>🥗 ${d.name}</span>
+        <button class="diet-tag-remove" onclick="removeDiet('${d.name}')" title="Remove">×</button>
+      </li>`).join('');
+  }
+
+  async function toggleCommonDiet(btn, name) {
+    if (btn.classList.contains('active')) {
+      await removeDiet(name);
+    } else {
+      await addDiet(name);
+    }
+  }
+
+  async function addCustomDiet() {
+    const input = document.getElementById('newDiet');
+    const name = input.value.trim();
+    if (!name) return;
+    await addDiet(name);
+    input.value = '';
+  }
+
+  async function addDiet(name) {
+    try {
+      const res = await fetch(`${API}/api/diets/add`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        renderDiets(data.diets);
+        document.querySelectorAll('.diet-chip-btn').forEach(btn => {
+          if (btn.textContent === name) btn.classList.add('active');
+        });
+      }
+    } catch { console.warn('Offline'); }
+  }
+
+  async function removeDiet(name) {
+    try {
+      const res = await fetch(`${API}/api/diets/remove`, {
+        method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        renderDiets(data.diets);
+        document.querySelectorAll('.diet-chip-btn').forEach(btn => {
+          if (btn.textContent === name) btn.classList.remove('active');
+        });
+      }
+    } catch { console.warn('Offline'); }
+  }
+
   // ─── Expiry check ────────────────────────────────────────────────
   async function checkExpiring() {
-  try {
-    const res = await fetch(`${API}/api/inventory/expiring?days=3`);
-    const data = await res.json();
+    try {
+      const res = await fetch(`${API}/api/inventory/expiring?days=3`);
+      const data = await res.json();
 
-    if (data.expiring && data.expiring.length > 0) {
-      const names = data.expiring.map(i => `${i.name} (BBD: ${i.haltbar_bis})`).join(', ');
-      addBotMessage(`⚠️ The following ingredients are expiring soon: ${names}\n\nI suggest recipes that use these up first.`);
-    } else {
-      addBotMessage('✅ Great! All your ingredients are still fresh. No action needed.');
+      if (data.expiring && data.expiring.length > 0) {
+        const lines = data.expiring.map(i => {
+          const days = i.days_left;
+          let when;
+          if (days <= 0) when = 'today';
+          else if (days === 1) when = 'tomorrow';
+          else when = `in ${days} days`;
+          return `- **${i.name}** — expires ${when} (BBD: ${i.haltbar_bis})`;
+        }).join('\n');
+        addBotMessage(`⚠️ **Expiring soon:**\n${lines}\n\nI'll prioritize these first in recipe suggestions so nothing goes to waste.`);
+      } else {
+        addBotMessage('✅ Nothing expiring in the next 3 days.');
+      }
+    } catch {
+      addBotMessage('Could not load expiry warnings — backend unreachable.');
     }
-  } catch {
-    addBotMessage('Could not load expiry warnings — backend unreachable.');
   }
-}
 
   // ─── Stats ───────────────────────────────────────────────────────
 async function refreshStats() {
@@ -894,6 +1080,7 @@ async function refreshAll() {
 
   await loadInventory();
   await loadAllergies();
+  await loadDiets();
   await refreshStats();
 
   const chat = document.getElementById('chatMessages');
@@ -904,13 +1091,7 @@ async function refreshAll() {
 
   addBotMessage(`## 🌿 Welcome to the Food Rescue Bot!
 
-I'm here to help you use up your ingredients and reduce food waste.
-
-**Here's how it works:**
-- Add ingredients to your pantry on the left
-- Set your allergies & intolerances once in the sidebar — I'll always respect them
-- Ask me for recipe ideas or use the quick actions below
-- I always prioritize ingredients that are expiring soon! 🥦
+Add ingredients on the left, set allergies & diet preferences once, and I'll always respect them.
 
 What would you like to cook today?`);
 }
@@ -1099,11 +1280,11 @@ What would you like to cook today?`);
         conversationHistory.push({ role: 'assistant', content: data.reply });
 
       } else if (isShoppingListRequest) {
-        const res = await fetch(`${API}/api/chat/message`, {
+        const res = await fetch(`${API}/api/chat/shopping-list`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: `Please create a practical low-waste shopping list based on my current pantry. Focus on ingredients that complement what I already have, avoid unnecessary purchases, and explain briefly why each item is useful. User request: ${text}`,
+            message: text,
             history: conversationHistory
           })
         });
