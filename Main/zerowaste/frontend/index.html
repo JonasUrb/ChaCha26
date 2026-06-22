@@ -35,7 +35,9 @@
     }
     .app.sidebar-collapsed { grid-template-columns: 56px 1fr; }
     .app.sidebar-collapsed .sidebar-logo,
+    .app.sidebar-collapsed .sidebar-new-chat,
     .app.sidebar-collapsed .sidebar-nav,
+    .app.sidebar-collapsed .sidebar-chat-history,
     .app.sidebar-collapsed .sidebar-inventory,
     .app.sidebar-collapsed .sidebar-allergies,
     .app.sidebar-collapsed .sidebar-diets,
@@ -66,12 +68,29 @@
     .sidebar-logo h1 { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: #fff; line-height: 1.2; }
     .sidebar-logo p { font-size: 11px; color: rgba(255,255,255,0.75); margin-left: 0; margin-top: 4px; white-space: nowrap;}
 
+    .sidebar-new-chat { padding: 14px 12px 0; }
+    .new-chat-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; border-radius: var(--radius-sm); border: 1.5px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.13); color: #fff; font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.18s; text-align: left; }
+    .new-chat-btn:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.36); transform: translateY(-1px); }
+    .new-chat-btn .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
     .sidebar-nav { padding: 16px 12px 8px; }
     .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); padding: 0 12px; margin-bottom: 8px; margin-top: 4px; }
     .nav-btn { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: none; background: transparent; color: rgba(255,255,255,0.75); font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.18s; text-align: left; }
     .nav-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
     .nav-btn.active { background: rgba(255,255,255,0.18); color: #fff; }
     .nav-btn .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-chat-history { padding: 4px 12px 12px; border-bottom: 1px solid rgba(255,255,255,0.10); }
+    .chat-history-header { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); padding: 0 12px; margin-bottom: 8px; }
+    .chat-session-list { list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 132px; overflow-y: auto; }
+    .chat-session-list::-webkit-scrollbar { width: 3px; }
+    .chat-session-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    .chat-session-btn { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px; border-radius: 8px; border: none; background: transparent; color: rgba(255,255,255,0.74); font-family: var(--font-body); cursor: pointer; text-align: left; transition: all 0.16s; }
+    .chat-session-btn:hover { background: rgba(255,255,255,0.10); color: #fff; }
+    .chat-session-btn.active { background: rgba(255,255,255,0.17); color: #fff; }
+    .chat-session-title { width: 100%; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-session-date { font-size: 10px; color: rgba(255,255,255,0.38); }
+    .empty-chat-history { font-size: 12px; color: rgba(255,255,255,0.35); padding: 6px 10px; }
     /* ─── Button image ───────────────────────────────────────────────────── */
     .image-btn {
   width: 46px;
@@ -288,13 +307,13 @@
     .empty-diets { font-size: 11px; color: rgba(255,255,255,0.3); text-align: center; padding: 6px 0; }
 
     /* ─── Impact Widget ──────────────────────────────────────────────── */
-    .impact-widget { margin: 0 12px 20px; background: rgba(255,255,255,0.10); border-radius: var(--radius-sm); padding: 14px 16px; }
-    .impact-widget .impact-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-    .impact-row { display: flex; flex-direction: column; gap: 6px; }
+    .impact-widget { margin: 0 12px 10px; background: rgba(255,255,255,0.10); border-radius: 8px; padding: 8px 10px; }
+    .impact-widget .impact-title { font-size: 9px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+    .impact-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
     .impact-item { display: flex; align-items: center; justify-content: space-between; }
-    .impact-item .label { font-size: 12px; color: rgba(255,255,255,0.65); }
-    .impact-item .value { font-family: var(--font-display); font-size: 16px; color: #fff; font-weight: 600; }
-    .impact-co2 { font-size: 11px; color: rgba(180,230,190,0.8); margin-top: 4px; }
+    .impact-item .label { font-size: 10px; color: rgba(255,255,255,0.62); white-space: nowrap; }
+    .impact-item .value { font-family: var(--font-display); font-size: 13px; color: #fff; font-weight: 600; }
+    .impact-co2 { grid-column: 1 / -1; font-size: 9px; color: rgba(180,230,190,0.72); margin-top: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* ─── Main ──────────────────────────────────────────────────────── */
     .main { display: flex; flex-direction: column; overflow: hidden; background: var(--cream); }
@@ -392,6 +411,8 @@
     .suggestion-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
     .suggestion-card { background: var(--green-light); border: 1.5px solid rgba(90,150,100,0.25); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; transition: all 0.18s; display: flex; align-items: flex-start; gap: 12px; }
     .suggestion-card:hover { background: #d4e8d6; border-color: var(--green-mid); transform: translateX(3px); }
+    .suggestion-card.static { cursor: default; }
+    .suggestion-card.static:hover { background: var(--green-light); border-color: rgba(90,150,100,0.25); transform: none; }
     .card-num { width: 28px; height: 28px; background: var(--green-dark); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
     .card-info { flex: 1; }
     .card-name { font-weight: 600; font-size: 14px; color: var(--green-accent); margin-bottom: 2px; }
@@ -495,15 +516,28 @@
       </div>
     </div>
 
+    <div class="sidebar-new-chat">
+      <button class="new-chat-btn" onclick="startNewChatFromSidebar()" title="Start new chat">
+        <span class="nav-icon">＋</span> New Chat
+      </button>
+    </div>
+
     <nav class="sidebar-nav">
       <div class="nav-label">Menu</div>
-      <button class="nav-btn active" onclick="switchView('chat', this)">
+      <button class="nav-btn active" id="navChatBtn" onclick="switchView('chat', this)">
         <span class="nav-icon">💬</span> Chat
       </button>
       <button class="nav-btn" onclick="switchView('stats', this)">
         <span class="nav-icon">📊</span> Statistics
       </button>
     </nav>
+
+    <div class="sidebar-chat-history">
+      <div class="chat-history-header">Recent Chats</div>
+      <ul class="chat-session-list" id="chatSessionList">
+        <li class="empty-chat-history">No previous chats.</li>
+      </ul>
+    </div>
 
     <!-- Scrollable section: pantry + allergies + diet -->
     <div class="sidebar-scroll">
@@ -705,9 +739,13 @@
 
 <script>
   const API = '';
+  const CHAT_SESSIONS_KEY = 'zerowaste.chatSessions.v1';
+  const MAX_CHAT_SESSIONS = 12;
   let conversationHistory = [];
   let pendingSuggestions = null;
   let pendingIngredientName = '';
+  let currentChatId = createChatId();
+  let currentChatMessages = [];
 
   document.addEventListener('DOMContentLoaded', async () => {
     await clearSavedPreferences();
@@ -715,12 +753,14 @@
     await loadAllergies();
     await loadDiets();
     await refreshStats();
+    renderChatSessionList();
     document.getElementById('modalHaltbarkeit').min = todayInputValue();
     addBotMessage(`## 🌿 Welcome to the Food Rescue Bot!
 
 Add ingredients on the left, set allergies & diet preferences once, and I'll always respect them.
 
 What would you like to cook today?`);
+    renderChatSessionList();
   });
 
   function switchView(view, btn) {
@@ -729,6 +769,11 @@ What would you like to cook today?`);
     document.getElementById('view-' + view).classList.add('active');
     btn.classList.add('active');
     if (view === 'stats') loadHistory();
+  }
+
+  async function startNewChatFromSidebar() {
+    switchView('chat', document.getElementById('navChatBtn'));
+    await newChat();
   }
 
   function toggleSidebar() {
@@ -759,6 +804,145 @@ What would you like to cook today?`);
   function formatBestBefore(value) {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
     return match ? `${match[3]}.${match[2]}.${match[1]}` : value;
+  }
+
+  function createChatId() {
+    return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function currentTimeLabel() {
+    return new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function loadChatSessions() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(CHAT_SESSIONS_KEY) || '[]');
+      return Array.isArray(stored) ? stored : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveChatSessions(sessions) {
+    try {
+      localStorage.setItem(CHAT_SESSIONS_KEY, JSON.stringify(sessions));
+    } catch {
+      console.warn('Could not save chat history.');
+    }
+  }
+
+  function chatHasUserMessages(messages = currentChatMessages) {
+    return messages.some(message => message.role === 'user');
+  }
+
+  function getChatTitle(messages = currentChatMessages) {
+    const firstUserMessage = messages.find(message => message.role === 'user');
+    const title = firstUserMessage ? firstUserMessage.content.trim() : 'New chat';
+    return title.length > 42 ? `${title.slice(0, 39)}...` : title;
+  }
+
+  function formatChatSessionDate(timestamp) {
+    if (!timestamp) return '';
+    return new Date(timestamp).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+  }
+
+  function buildConversationHistoryFromMessages(messages) {
+    return messages
+      .filter(message => message.role === 'user' || message.role === 'bot')
+      .filter(message => !String(message.content || '').includes('Welcome to the Food Rescue Bot'))
+      .map(message => ({
+        role: message.role === 'bot' ? 'assistant' : 'user',
+        content: message.content,
+      }));
+  }
+
+  function recordChatMessage(message) {
+    currentChatMessages.push(message);
+    saveCurrentChatSession();
+  }
+
+  function saveCurrentChatSession() {
+    if (!chatHasUserMessages()) {
+      renderChatSessionList();
+      return;
+    }
+
+    const sessions = loadChatSessions();
+    const savedSession = {
+      id: currentChatId,
+      title: getChatTitle(),
+      updatedAt: Date.now(),
+      messages: currentChatMessages,
+      history: buildConversationHistoryFromMessages(currentChatMessages),
+    };
+
+    const nextSessions = [
+      savedSession,
+      ...sessions.filter(session => session.id !== currentChatId),
+    ].slice(0, MAX_CHAT_SESSIONS);
+
+    saveChatSessions(nextSessions);
+    renderChatSessionList();
+  }
+
+  function renderChatSessionList() {
+    const list = document.getElementById('chatSessionList');
+    if (!list) return;
+
+    const sessions = loadChatSessions();
+    if (sessions.length === 0) {
+      list.innerHTML = '<li class="empty-chat-history">No previous chats.</li>';
+      return;
+    }
+
+    list.innerHTML = sessions.map(session => `
+      <li>
+        <button class="chat-session-btn ${session.id === currentChatId ? 'active' : ''}" onclick="loadChatSession('${session.id}')">
+          <span class="chat-session-title">${escapeHtml(session.title || 'Untitled chat')}</span>
+          <span class="chat-session-date">${formatChatSessionDate(session.updatedAt)}</span>
+        </button>
+      </li>
+    `).join('');
+  }
+
+  function findPendingSuggestionsFromMessages(messages) {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const message = messages[i];
+      if (message.role === 'user') return null;
+      if (message.role === 'bot' && Array.isArray(message.cards) && message.cards.length > 0) {
+        return message.cards;
+      }
+    }
+    return null;
+  }
+
+  function loadChatSession(id) {
+    const session = loadChatSessions().find(item => item.id === id);
+    if (!session) return;
+
+    currentChatId = session.id;
+    currentChatMessages = Array.isArray(session.messages) ? session.messages : [];
+    conversationHistory = buildConversationHistoryFromMessages(currentChatMessages);
+    pendingSuggestions = findPendingSuggestionsFromMessages(currentChatMessages);
+
+    switchView('chat', document.getElementById('navChatBtn'));
+
+    const chat = document.getElementById('chatMessages');
+    chat.innerHTML = '';
+
+    currentChatMessages.forEach(message => {
+      if (message.role === 'user') {
+        addUserMessage(message.content, { skipStore: true, time: message.time });
+      } else {
+        addBotMessage(message.content, message.cards || null, {
+          skipStore: true,
+          time: message.time,
+          cardsInteractive: message.cards === pendingSuggestions,
+        });
+      }
+    });
+
+    renderChatSessionList();
   }
 
   // ─── Ingredient Popup ────────────────────────────────────────────
@@ -1124,6 +1308,11 @@ async function refreshAll() {
 }
 
 async function newChat() {
+  saveCurrentChatSession();
+
+  currentChatId = createChatId();
+  currentChatMessages = [];
+
   await loadInventory();
   await loadAllergies();
   await loadDiets();
@@ -1140,6 +1329,7 @@ async function newChat() {
 Add ingredients on the left, set allergies & diet preferences once, and I'll always respect them.
 
 What would you like to cook today?`);
+  renderChatSessionList();
 }
 
 
@@ -1169,8 +1359,8 @@ What would you like to cook today?`);
 }
 
   // ─── Chat ────────────────────────────────────────────────────────
-  function addUserMessage(text) {
-    const now = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+  function addUserMessage(text, options = {}) {
+    const now = options.time || currentTimeLabel();
     const div = document.createElement('div');
     div.className = 'message user';
     div.innerHTML = `
@@ -1181,16 +1371,20 @@ What would you like to cook today?`);
       </div>`;
     document.getElementById('chatMessages').appendChild(div);
     scrollToBottom();
+
+    if (!options.skipStore) {
+      recordChatMessage({ role: 'user', content: text, time: now });
+    }
   }
 
-  function addBotMessage(markdown, withCards = null) {
-    const now = new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+  function addBotMessage(markdown, withCards = null, options = {}) {
+    const now = options.time || currentTimeLabel();
     const div = document.createElement('div');
     div.className = 'message bot';
     let cardsHtml = '';
     if (withCards) {
       cardsHtml = `<div class="suggestion-cards">${withCards.map((s, i) => `
-        <div class="suggestion-card" onclick="selectRecipe(${i})">
+        <div class="suggestion-card ${options.cardsInteractive === false ? 'static' : ''}" ${options.cardsInteractive === false ? '' : `onclick="selectRecipe(${i})"`}>
           <div class="card-num">${i + 1}</div>
           <div class="card-info">
             <div class="card-name">${s.name}</div>
@@ -1211,6 +1405,10 @@ What would you like to cook today?`);
       </div>`;
     document.getElementById('chatMessages').appendChild(div);
     scrollToBottom();
+
+    if (!options.skipStore) {
+      recordChatMessage({ role: 'bot', content: markdown, cards: withCards, time: now });
+    }
   }
 
   function showTyping() {
