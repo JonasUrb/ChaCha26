@@ -709,12 +709,13 @@
   let pendingSuggestions = null;
   let pendingIngredientName = '';
 
-  document.addEventListener('DOMContentLoaded', () => {
-    loadInventory();
-    loadAllergies();
-    loadDiets();
-    refreshStats();
-    document.getElementById('modalHaltbarkeit').min = new Date().toISOString().split('T')[0];
+  document.addEventListener('DOMContentLoaded', async () => {
+    await clearSavedPreferences();
+    await loadInventory();
+    await loadAllergies();
+    await loadDiets();
+    await refreshStats();
+    document.getElementById('modalHaltbarkeit').min = todayInputValue();
     addBotMessage(`## 🌿 Welcome to the Food Rescue Bot!
 
 Add ingredients on the left, set allergies & diet preferences once, and I'll always respect them.
@@ -735,6 +736,29 @@ What would you like to cook today?`);
     const btn = document.getElementById('sidebarToggle');
     app.classList.toggle('sidebar-collapsed');
     btn.title = app.classList.contains('sidebar-collapsed') ? 'Show sidebar' : 'Hide sidebar';
+  }
+
+  function toDateInputValue(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function todayInputValue() {
+    return toDateInputValue(new Date());
+  }
+
+  function addDaysInputValue(days) {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + days);
+    return toDateInputValue(date);
+  }
+
+  function formatBestBefore(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+    return match ? `${match[3]}.${match[2]}.${match[1]}` : value;
   }
 
   // ─── Ingredient Popup ────────────────────────────────────────────
@@ -767,9 +791,7 @@ What would you like to cook today?`);
   }
 
   function setQuickDate(days) {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    document.getElementById('modalHaltbarkeit').value = d.toISOString().split('T')[0];
+    document.getElementById('modalHaltbarkeit').value = addDaysInputValue(days);
     clearError();
   }
 
@@ -821,7 +843,7 @@ What would you like to cook today?`);
       const list = document.getElementById('inventoryList');
       const li = document.createElement('li');
       li.className = 'ingredient-chip';
-      li.innerHTML = `<div class="chip-text"><span>${pendingIngredientName} · ${menge} ${einheit}</span><span class="chip-expiry">⏰ BBD: ${haltbar}</span></div><button class="chip-remove" onclick="this.closest('li').remove()">×</button>`;
+      li.innerHTML = `<div class="chip-text"><span>${pendingIngredientName} · ${menge} ${einheit}</span><span class="chip-expiry">⏰ BBD: ${formatBestBefore(haltbar)}</span></div><button class="chip-remove" onclick="this.closest('li').remove()">×</button>`;
       if (list.querySelector('.empty-inventory')) list.innerHTML = '';
       list.appendChild(li);
       document.getElementById('newIngredient').value = '';
@@ -853,12 +875,12 @@ What would you like to cook today?`);
     const list = document.getElementById('inventoryList');
     if (items.length === 0) { list.innerHTML = '<li class="empty-inventory">No ingredients yet.</li>'; return; }
     list.innerHTML = items.map(item => {
-      const expiring = item.haltbar_bis && item.haltbar_bis <= new Date(Date.now() + 3*86400000).toISOString().split('T')[0];
+      const expiring = item.haltbar_bis && item.haltbar_bis <= addDaysInputValue(3);
       const mengeStr = item.menge ? ` · ${item.menge} ${item.einheit || ''}`.trim() : '';
       return `<li class="ingredient-chip ${expiring ? 'expiring-soon' : ''}">
         <div class="chip-text">
           <span>${item.name}${mengeStr}</span>
-          ${item.haltbar_bis ? `<span class="chip-expiry">⏰ BBD: ${item.haltbar_bis}</span>` : ''}
+          ${item.haltbar_bis ? `<span class="chip-expiry">⏰ BBD: ${formatBestBefore(item.haltbar_bis)}</span>` : ''}
         </div>
         <button class="chip-remove" onclick="removeIngredient('${item.name}')" title="Remove">×</button>
       </li>`;
@@ -1031,17 +1053,18 @@ What would you like to cook today?`);
   // ─── Expiry check ────────────────────────────────────────────────
   async function checkExpiring() {
     try {
-      const res = await fetch(`${API}/api/inventory/expiring?days=3`);
+      const res = await fetch(`${API}/api/inventory/expiring?days=3&today=${todayInputValue()}`);
       const data = await res.json();
 
       if (data.expiring && data.expiring.length > 0) {
         const lines = data.expiring.map(i => {
           const days = i.days_left;
           let when;
-          if (days <= 0) when = 'today';
-          else if (days === 1) when = 'tomorrow';
-          else when = `in ${days} days`;
-          return `- **${i.name}** — expires ${when} (BBD: ${i.haltbar_bis})`;
+          if (days < 0) when = days === -1 ? 'expired yesterday' : `expired ${Math.abs(days)} days ago`;
+          else if (days === 0) when = 'expires today';
+          else if (days === 1) when = 'expires tomorrow';
+          else when = `expires in ${days} days`;
+          return `- **${i.name}** — ${when} (BBD: ${formatBestBefore(i.haltbar_bis)})`;
         }).join('\n');
         addBotMessage(`⚠️ **Expiring soon:**\n${lines}\n\nI'll prioritize these first in recipe suggestions so nothing goes to waste.`);
       } else {
@@ -1069,6 +1092,24 @@ async function refreshStats() {
   }
 }
 
+async function clearSavedPreferences() {
+  try {
+    await fetch(`${API}/api/allergies/clear`, {
+      method: 'DELETE'
+    });
+  } catch {
+    console.warn('Could not clear allergies.');
+  }
+
+  try {
+    await fetch(`${API}/api/diets/clear`, {
+      method: 'DELETE'
+    });
+  } catch {
+    console.warn('Could not clear diet preferences.');
+  }
+}
+
 async function refreshAll() {
   try {
     await fetch(`${API}/api/inventory/clear`, {
@@ -1078,6 +1119,11 @@ async function refreshAll() {
     console.warn('Could not clear pantry.');
   }
 
+  await clearSavedPreferences();
+  await newChat();
+}
+
+async function newChat() {
   await loadInventory();
   await loadAllergies();
   await loadDiets();

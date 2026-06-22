@@ -7,9 +7,13 @@ Tables:
   - diet_preferences  : User's saved diet types (vegan, vegetarian, halal, ...)
 """
 
+from __future__ import annotations
+
 import os
 import sqlite3
+from datetime import date, timedelta
 from pathlib import Path
+from typing import Optional
 
 # Configurable via DATA_DIR env var; defaults to /app/data for Docker
 _data_dir = os.environ.get("DATA_DIR", "/app/data")
@@ -90,23 +94,34 @@ def get_all_ingredients() -> list[dict]:
         return [dict(row) for row in rows]
 
 
-def get_expiring_soon(days: int = 3) -> list[dict]:
+def get_expiring_soon(days: int = 3, today: Optional[date] = None) -> list[dict]:
     """
     Returns ingredients expiring within `days` days, including a precise
     `days_left` integer (0 = today, 1 = tomorrow, ...) so the UI/agent can
     explain *why* an ingredient is being prioritized instead of just showing
     a raw date.
     """
+    today_date = today or date.today()
+    cutoff_date = today_date + timedelta(days=days)
+
     with get_connection() as conn:
         rows = conn.execute(
-            """SELECT *,
-                      CAST(julianday(date(haltbar_bis)) - julianday(date('now')) AS INTEGER) AS days_left
-               FROM inventory
-               WHERE date(haltbar_bis) <= date('now', ? || ' days')
-               ORDER BY haltbar_bis ASC""",
-            (str(days),)
+            "SELECT * FROM inventory ORDER BY haltbar_bis ASC, name ASC"
         ).fetchall()
-        return [dict(row) for row in rows]
+
+    expiring = []
+    for row in rows:
+        item = dict(row)
+        try:
+            best_before = date.fromisoformat(item["haltbar_bis"])
+        except (TypeError, ValueError):
+            continue
+
+        if best_before <= cutoff_date:
+            item["days_left"] = (best_before - today_date).days
+            expiring.append(item)
+
+    return expiring
 
 
 def update_expiry(name: str, haltbar_bis: str) -> bool:
@@ -139,6 +154,11 @@ def remove_allergy(name: str) -> bool:
             (f"%{name.strip()}%",)
         )
         return result.rowcount > 0
+
+
+def clear_allergies() -> None:
+    with get_connection() as conn:
+        conn.execute("DELETE FROM allergies")
 
 
 def get_all_allergies() -> list[dict]:
@@ -174,6 +194,11 @@ def remove_diet_preference(name: str) -> bool:
             (f"%{name.strip()}%",)
         )
         return result.rowcount > 0
+
+
+def clear_diet_preferences() -> None:
+    with get_connection() as conn:
+        conn.execute("DELETE FROM diet_preferences")
 
 
 def get_all_diet_preferences() -> list[dict]:

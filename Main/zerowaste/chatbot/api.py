@@ -5,10 +5,15 @@
 # Start with:  python api.py
 # Or via Docker/compose.yml
 
-import os
-from contextlib import asynccontextmanager
+from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+import os
+import re
+from contextlib import asynccontextmanager
+from datetime import date
+from typing import Optional
+
+from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -53,7 +58,7 @@ class IngredientRemove(BaseModel):
 
 class RatingRequest(BaseModel):
     bewertung: int
-    notiz: str | None = None
+    notiz: Optional[str] = None
 
 class RecipeRequest(BaseModel):
     recipe_name: str
@@ -70,6 +75,82 @@ class DietAdd(BaseModel):
 
 class DietRemove(BaseModel):
     name: str
+
+FOOD_RESCUE_SCOPE_RE = re.compile(
+    r"\b("
+    r"food|foods|ingredient|ingredients|pantry|fridge|freezer|kitchen|recipe|recipes|cook|cooking|cooked|meal|meals|"
+    r"breakfast|lunch|dinner|snack|dish|leftover|leftovers|expiry|expire|expires|expired|shelf life|best before|"
+    r"use-by|use by|food safety|shopping list|grocery|groceries|allergy|allergies|intolerance|diet|vegan|vegetarian|"
+    r"halal|kosher|pescatarian|low-carb|sustainability|sustainable|waste|zero waste|"
+    r"milk|bread|egg|eggs|cheese|yogurt|yoghurt|meat|fish|chicken|beef|pork|tofu|rice|pasta|potato|potatoes|"
+    r"tomato|tomatoes|vegetable|vegetables|fruit|fruits|apple|banana|salad|soup|sauce|flour|sugar|oil|butter|"
+    r"zutat|zutaten|vorrat|kueche|küche|kuehlschrank|kühlschrank|rezept|rezepte|kochen|gekocht|essen|mahlzeit|"
+    r"fruehstueck|frühstück|mittagessen|abendessen|reste|haltbar|haltbarkeit|abgelaufen|mhd|verbrauchsdatum|"
+    r"lebensmittel|lebensmittelsicherheit|lebensmittelverschwendung|einkauf|einkaufsliste|allergen|allergene|"
+    r"allergie|unvertraeglichkeit|unverträglichkeit|diaet|diät|ernaehrung|ernährung|vegetarisch|nachhaltig"
+    r")\b",
+    re.IGNORECASE,
+)
+
+APP_HELP_RE = re.compile(
+    r"^\s*(hi|hello|hey|help|hilfe|what can you do|what do you do|was kannst du|wie funktioniert das)\s*[.!?]*\s*$",
+    re.IGNORECASE,
+)
+
+CONTINUATION_RE = re.compile(
+    r"^\s*(yes|no|ok|okay|sure|please|thanks|thank you|more|again|cancel|ja|nein|bitte|danke|weiter|mehr|"
+    r"nochmal|abbrechen|[1-3])\s*[.!?]*\s*$",
+    re.IGNORECASE,
+)
+
+OFF_TOPIC_QUESTION_RE = re.compile(
+    r"\b(why|what|how|who|where|when|explain|tell me|wieso|warum|was|wie|wer|wo|wann|erklaer|erklär)\b",
+    re.IGNORECASE,
+)
+
+GERMAN_HINT_RE = re.compile(
+    r"[äöüß]|\b(wieso|warum|was|wie|kannst|erklär|erklaer|himmel|frage|antwort)\b",
+    re.IGNORECASE,
+)
+
+
+def is_food_rescue_request(message: str, ingredients: Optional[list[dict]] = None, history: Optional[list[dict]] = None) -> bool:
+    text = (message or "").strip()
+    if not text:
+        return True
+
+    if APP_HELP_RE.search(text):
+        return True
+
+    if history and len(text) <= 80 and CONTINUATION_RE.search(text):
+        return True
+
+    if FOOD_RESCUE_SCOPE_RE.search(text):
+        return True
+
+    normalized = text.lower()
+    for item in ingredients or []:
+        name = str(item.get("name", "")).strip().lower()
+        if len(name) >= 3 and re.search(rf"\b{re.escape(name)}\b", normalized):
+            return True
+
+    return False
+
+
+def out_of_scope_reply(message: str) -> str:
+    if GERMAN_HINT_RE.search(message or ""):
+        return (
+            "Ich kann nur bei Food-Rescue-Themen helfen: Vorrat, Zutaten, Haltbarkeit/MHD, "
+            "Rezepte, Einkaufsliste, Allergene, Ernährung und Lebensmittelverschwendung. "
+            "Frag mich gern dazu."
+        )
+
+    return (
+        "I can only help with food rescue topics: pantry ingredients, expiry dates, shelf life, "
+        "recipes, shopping lists, allergies, diet preferences, and reducing food waste. "
+        "Ask me something in that area and I’ll help."
+    )
+
 
 @app.get("/")
 async def root():
@@ -89,12 +170,17 @@ async def add_ingredient(item: IngredientAdd):
             status_code=422,
             detail=f"Invalid unit '{item.einheit}'. Allowed: {', '.join(sorted(allowed_units))}",
         )
-    added = db.add_ingredient(item.name, item.menge, item.einheit, item.haltbar_bis)
+    try:
+        best_before = date.fromisoformat(item.haltbar_bis)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="haltbar_bis must be a valid YYYY-MM-DD date.")
+
+    added = db.add_ingredient(item.name, item.menge, item.einheit, best_before.isoformat())
     if not added:
         raise HTTPException(status_code=409, detail=f"'{item.name}' is already in the pantry.")
     return {
         "success": True,
-        "message": f"✅ '{item.name}' added ({item.menge} {item.einheit}, BBD: {item.haltbar_bis}).",
+        "message": f"✅ '{item.name}' added ({item.menge} {item.einheit}, BBD: {best_before.isoformat()}).",
         "inventory": db.get_all_ingredients(),
     }
 
@@ -112,8 +198,15 @@ async def clear_inventory():
     return {"success": True, "message": "Pantry cleared.", "inventory": []}
 
 @app.get("/api/inventory/expiring")
-async def get_expiring(days: int = 3):
-    return {"expiring": db.get_expiring_soon(days)}
+async def get_expiring(days: int = Query(3, ge=0, le=365), today: Optional[str] = None):
+    today_date = None
+    if today:
+        try:
+            today_date = date.fromisoformat(today)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="today must be a valid YYYY-MM-DD date.")
+
+    return {"expiring": db.get_expiring_soon(days, today_date)}
 
 # ─── Allergy endpoints ────────────────────────────────────────────────────────
 
@@ -135,6 +228,11 @@ async def remove_allergy(item: AllergyRemove):
         raise HTTPException(status_code=404, detail=f"'{item.name}' not found.")
     return {"success": True, "message": f"✅ Allergy '{item.name}' removed.", "allergies": db.get_all_allergies()}
 
+@app.delete("/api/allergies/clear")
+async def clear_allergies():
+    db.clear_allergies()
+    return {"success": True, "message": "Allergies cleared.", "allergies": []}
+
 # ─── Diet preference endpoints ────────────────────────────────────────────────
 
 @app.get("/api/diets")
@@ -155,6 +253,11 @@ async def remove_diet(item: DietRemove):
         raise HTTPException(status_code=404, detail=f"'{item.name}' not found.")
     return {"success": True, "message": f"✅ Diet preference '{item.name}' removed.", "diets": db.get_all_diet_preferences()}
 
+@app.delete("/api/diets/clear")
+async def clear_diets():
+    db.clear_diet_preferences()
+    return {"success": True, "message": "Diet preferences cleared.", "diets": []}
+
 # ─── Chat endpoints ───────────────────────────────────────────────────────────
 
 @app.post("/api/chat/suggest")
@@ -164,6 +267,9 @@ async def suggest_recipes(req: ChatMessage):
         ingredients = db.get_all_ingredients()
         allergies   = db.get_all_allergies()
         diets       = db.get_all_diet_preferences()
+        if not is_food_rescue_request(req.message, ingredients, req.history):
+            raise HTTPException(status_code=400, detail=out_of_scope_reply(req.message))
+
         suggestions, log = agent.get_suggestions(req.message, ingredients, allergies, diets)
         log_writer.write(log)
         if not suggestions:
@@ -181,6 +287,9 @@ async def get_recipe(req: RecipeRequest):
         ingredients = db.get_all_ingredients()
         allergies   = db.get_all_allergies()
         diets       = db.get_all_diet_preferences()
+        if OFF_TOPIC_QUESTION_RE.search(req.recipe_name) and not is_food_rescue_request(req.recipe_name, ingredients, req.history):
+            raise HTTPException(status_code=400, detail=out_of_scope_reply(req.recipe_name))
+
         recipe_text, log = agent.get_recipe(req.recipe_name, req.history, ingredients, allergies, diets)
         log_writer.write(log)
         db.save_recipe(req.recipe_name)
@@ -195,6 +304,9 @@ async def get_shopping_list(req: ChatMessage):
         ingredients = db.get_all_ingredients()
         allergies   = db.get_all_allergies()
         diets       = db.get_all_diet_preferences()
+        if not is_food_rescue_request(req.message, ingredients, req.history):
+            raise HTTPException(status_code=400, detail=out_of_scope_reply(req.message))
+
         reply, log = agent.get_shopping_list(req.message, ingredients, allergies, diets)
         log_writer.write(log)
         return {"reply": reply}
@@ -208,6 +320,16 @@ async def chat(req: ChatMessage):
         ingredients = db.get_all_ingredients()
         allergies   = db.get_all_allergies()
         diets       = db.get_all_diet_preferences()
+        if not is_food_rescue_request(req.message, ingredients, req.history):
+            reply = out_of_scope_reply(req.message)
+            log_writer.write({
+                "type": "out_of_scope",
+                "user_message": req.message,
+                "chatbot_response": reply,
+                "history_length": len(req.history),
+            })
+            return {"reply": reply}
+
         context_message = f"[Current pantry: {', '.join(i['name'] for i in ingredients) or 'empty'}]\n\n{req.message}"
         reply, log = agent.chat_message(context_message, req.history, ingredients, allergies, diets)
         log_writer.write(log)

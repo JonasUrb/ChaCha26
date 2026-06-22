@@ -1,14 +1,13 @@
 services:
-  # zerowaste – API + UI in one container, two ports (like AnimalBot)
+  # zerowaste – API + UI in one container.
+  # Users open the UI port. The API port is only for frontend requests and docs.
   zerowaste:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${API_PORT:-8001}:8000"   # REST API   →  http://localhost:8001/api/...
-                                   # API docs   →  http://localhost:8001/docs
-      - "${UI_PORT:-8511}:8501"    # Frontend   →  http://localhost:8511/
-      # http://localhost:8511/ zum Starten der App lokal, http://localhost:8001/docs für die API-Dokumentation
+      - "${UI_PORT:-8511}:8501"    # App öffnen: http://localhost:8511/
+      - "${API_PORT:-8001}:8000"   # API docs:   http://localhost:8001/docs
     volumes:
       - "${DATA_DIR:-./data}:/app/data"   # SQLite DB + conversation.jsonp logs
       - "./chatbot:/app"                   # live-reload chatbot code in dev
