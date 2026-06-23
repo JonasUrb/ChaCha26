@@ -3,6 +3,7 @@
 # Usage: imported by api.py
 
 import os
+import re
 import json
 import base64
 from openai import OpenAI
@@ -73,23 +74,20 @@ Important — you cannot see or smell the user's food:
 """
 
 SUGGESTION_PROMPT_BASE = """
-You are a professional chef with 20 years of experience. Your task is to suggest exactly 3 recipes based on the user's pantry.
+You are a professional chef with 20 years of experience. Your task is to suggest exactly {count} recipe(s) based on the user's pantry.
 
 STRICT RULES — follow every one without exception:
 1. CULINARY SANITY: Only suggest dishes that are genuinely delicious and would be served in a real restaurant or home kitchen. Never combine ingredients that don't belong together.
-2. BASICS ARE ALWAYS AVAILABLE: Assume the user always has salt, pepper, oil, butter, garlic, onions, and water — even if not listed in the pantry. State this assumption nowhere in the output (it's implicit), but never mark these basics as "(buy if needed)".
-3. USER WISH IS HIGHEST PRIORITY: If the user expresses a specific craving or preference, ALL 3 suggestions must match that wish exactly.
-4. MISSING INGREDIENTS: If a key ingredient for the requested dish isn't in the pantry, you may still suggest the dish — mark missing items with "(buy if needed)" in the ingredients list.
+2. BASICS ARE ALWAYS AVAILABLE: Assume the user always has salt, pepper, oil, butter, garlic, onions, and water — even if not listed in the pantry. Never mark these basics as "(buy if needed)".
+3. USER WISH IS HIGH PRIORITY, BUT NEVER OVERRIDES ALLERGIES OR DIET PREFERENCES BELOW: If the user expresses a specific craving or preference, match it as closely as possible while staying fully compliant with any allergy/diet constraints. If the literal wish conflicts with the diet preference, reinterpret it as a request for the closest compliant alternative instead of following it literally.
+4. MISSING INGREDIENTS: If a key ingredient for a requested dish isn't in the pantry, you may still suggest the dish — mark missing items with "(buy if needed)" in the ingredients list.
 5. EXPIRY FIRST: Prioritize ingredients that expire soonest, visible from the [BBD: date] tag in the pantry.
-6. REAL VARIETY: The 3 dishes must differ meaningfully from each other in at least two of: cuisine style, main protein/vegetable, and cooking method (e.g. not three pasta dishes, not three pan-fried dishes). Do not repeat the same sauce or base across suggestions.
-7. QUALITY OVER QUANTITY: Each suggestion should feel appealing and appetizing.
+{variety_rule}7. QUALITY OVER QUANTITY: Each suggestion should feel appealing and appetizing.
 
 Respond ONLY with raw JSON — no backticks, no explanation, no comments:
 {{
   "suggestions": [
-    {{"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "easy", "duration_min": 20}},
-    {{"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "medium", "duration_min": 35}},
-    {{"name": "...", "description": "One enticing sentence", "ingredients_used": ["..."], "difficulty": "easy", "duration_min": 15}}
+    {example_items}
   ]
 }}
 Difficulty must be exactly one of: "easy", "medium", "advanced".
@@ -187,9 +185,10 @@ class ZeroWasteAgent:
         names = [a["name"] if isinstance(a, dict) else a for a in allergies]
         allergy_list = ", ".join(names)
         return (
-            f"\n⚠️ USER ALLERGIES / INTOLERANCES: {allergy_list}\n"
-            "- Do NOT use any ingredients containing these allergens.\n"
-            "- If a suggested recipe unavoidably contains an allergen, flag it clearly with a warning.\n"
+            f"\n⚠️ USER ALLERGIES / INTOLERANCES — HARD CONSTRAINT, OVERRIDES EVERYTHING ELSE: {allergy_list}\n"
+            "- This is non-negotiable. It overrides the user's wish and any other instruction in this prompt.\n"
+            "- Do NOT use any ingredients containing these allergens, even if the user explicitly asks for them.\n"
+            "- If a suggested recipe unavoidably contains an allergen, flag it clearly with a warning instead of including it silently.\n"
             "- Always suggest allergen-free alternatives where possible.\n"
         )
 
@@ -199,10 +198,11 @@ class ZeroWasteAgent:
         names = [d["name"] if isinstance(d, dict) else d for d in diet_preferences]
         diet_list = ", ".join(names)
         return (
-            f"\n🥗 USER DIET PREFERENCE(S): {diet_list}\n"
-            "- Every suggestion and recipe MUST comply with these diet preferences (e.g. a vegan request means no meat, fish, dairy, eggs or honey; halal means no pork or alcohol and only halal-compatible proteins; vegetarian means no meat or fish).\n"
-            "- If pantry ingredients conflict with the diet preference, leave them out or suggest a compliant substitute instead.\n"
-            "- Do not silently ignore the diet preference even if it makes a request harder to fulfill with the current pantry.\n"
+            f"\n🥗 USER DIET PREFERENCE(S) — HARD CONSTRAINT, OVERRIDES EVERYTHING ELSE: {diet_list}\n"
+            "- This is non-negotiable. It overrides the user's wish, the pantry contents, and any other rule or instruction in this prompt — no exceptions.\n"
+            "- Treat any pantry ingredient that violates this diet (e.g. meat/fish/dairy/eggs/honey for vegan, meat/fish for vegetarian, pork/alcohol/non-halal meat for halal) as NOT AVAILABLE: do not use it, do not name it, do not build a recipe around it.\n"
+            "- If the user's wish or message literally names a non-compliant dish or ingredient (e.g. a vegan user asks 'what can I cook with minced meat'), do NOT follow that literally. Instead, reinterpret it as a request for the closest diet-compliant alternative (e.g. a plant-based ground-meat substitute, or a different dish that satisfies the same craving) and briefly note that you adapted it.\n"
+            "- Every single suggestion and recipe MUST fully comply with this diet preference. Re-check each one against this list before responding.\n"
         )
 
     def _format_inventory(self, ingredients: list) -> str:
@@ -242,6 +242,49 @@ class ZeroWasteAgent:
             f"Diet preference:\n{diet_text}\n"
         )
 
+    def _detect_requested_count(self, user_wish: str) -> int:
+        """
+        Detect if the user explicitly asked for a specific number of recipe
+        suggestions (e.g. "give me 1 recipe", "show me 5 ideas", "nur ein
+        Rezept", "zwei Vorschläge"). Defaults to 3 if nothing explicit is found.
+        Clamped to a sane range of 1–6.
+        """
+        if not user_wish:
+            return 3
+        text = user_wish.lower()
+
+        # Digit + keyword, e.g. "3 recipes", "5 vorschläge", "1 idea"
+        match = re.search(
+            r"\b(\d+)\s*(recipes?|suggestions?|ideas?|rezepte?|vorschl[äa]ge?|ideen)\b",
+            text,
+        )
+        if match:
+            return max(1, min(int(match.group(1)), 6))
+
+        # Explicit single-recipe phrasing
+        if re.search(
+            r"\b(only one|just one|a single|one recipe|one suggestion|one idea|"
+            r"nur ein|nur eine|ein rezept|eine idee|einen vorschlag)\b",
+            text,
+        ):
+            return 1
+
+        # Spelled-out numbers + keyword
+        word_numbers = {
+            "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+            "ein": 1, "eine": 1, "zwei": 2, "drei": 3, "vier": 4,
+            "fünf": 5, "fuenf": 5, "sechs": 6,
+        }
+        match = re.search(
+            r"\b(one|two|three|four|five|six|ein|eine|zwei|drei|vier|fünf|fuenf|sechs)\s*"
+            r"(recipes?|suggestions?|ideas?|rezepte?|vorschl[äa]ge?|ideen)\b",
+            text,
+        )
+        if match:
+            return word_numbers.get(match.group(1), 3)
+
+        return 3
+
     def _parse_suggestions(self, raw: str) -> dict:
         cleaned = raw.strip().replace("```json", "").replace("```", "").strip()
         try:
@@ -260,42 +303,75 @@ class ZeroWasteAgent:
 
     def get_suggestions(self, user_wish: str, ingredients: list, allergies: list, diet_preferences: list = None):
         """
-        Suggest 3 recipes based on pantry and optional user wish.
+        Suggest N recipes based on pantry and optional user wish (N defaults
+        to 3, or whatever explicit count the user asked for).
         Returns (suggestions_list, log_message).
         """
         inventory_str = self._format_inventory(ingredients)
         allergy_block = self._build_allergy_block(allergies)
         diet_block = self._build_diet_block(diet_preferences)
+        count = self._detect_requested_count(user_wish)
+
+        example_difficulties = ["easy", "medium", "easy", "advanced", "medium", "easy"]
+        example_durations = [20, 35, 15, 45, 30, 25]
+        example_items = ",\n    ".join(
+            (
+                '{{"name": "...", "description": "One enticing sentence", '
+                '"ingredients_used": ["..."], "difficulty": "%s", "duration_min": %d}}'
+            ) % (example_difficulties[i % 6], example_durations[i % 6])
+            for i in range(count)
+        )
+
+        if count > 1:
+            variety_rule = (
+                f"6. REAL VARIETY: The {count} dishes must differ meaningfully from each other in at least two of: "
+                "cuisine style, main protein/vegetable, and cooking method (e.g. not three pasta dishes, not three "
+                "pan-fried dishes). Do not repeat the same sauce or base across suggestions.\n"
+            )
+        else:
+            variety_rule = (
+                "6. FOCUS: Only one suggestion was requested — make it the single best, most appealing match "
+                "for the user's pantry and wish.\n"
+            )
 
         if user_wish:
             prompt = (
                 f"Pantry: {inventory_str}\n\n"
-                f"USER REQUEST (highest priority — all 3 recipes must match this): {user_wish}\n\n"
-                "Suggest 3 recipes that match the user's request and make good use of pantry ingredients."
+                f"USER REQUEST (highest priority — all {count} recipe(s) must match this): {user_wish}\n\n"
+                f"Suggest {count} recipe(s) that match the user's request and make good use of pantry ingredients."
             )
         else:
             prompt = (
                 f"Pantry: {inventory_str}\n\n"
-                "Suggest 3 delicious and sensible recipes using the pantry ingredients."
+                f"Suggest {count} delicious and sensible recipe(s) using the pantry ingredients."
             )
+
+        system_prompt = SUGGESTION_PROMPT_BASE.format(
+            count=count,
+            variety_rule=variety_rule,
+            example_items=example_items,
+            allergy_block=allergy_block,
+            diet_block=diet_block,
+        )
 
         response = self.client.chat.completions.create(
             model=LLM_MODEL,
             messages=[
-                {"role": "system", "content": SUGGESTION_PROMPT_BASE.format(allergy_block=allergy_block, diet_block=diet_block)},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=900,
+            max_tokens=300 * count + 200,
             temperature=0.6,
         )
 
         raw = response.choices[0].message.content.strip()
         data = self._parse_suggestions(raw)
-        suggestions = data.get("suggestions", [])
+        suggestions = data.get("suggestions", [])[:count]
 
         log_message = {
             "type": "suggest",
             "user_wish": user_wish,
+            "requested_count": count,
             "inventory": inventory_str,
             "raw_response": raw,
             "suggestions_count": len(suggestions),
