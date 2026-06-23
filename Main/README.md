@@ -180,20 +180,23 @@ docker compose version
 
 ## Starten ohne Docker
 
-Wenn du ohne Docker arbeiten möchtest (z.B. zum Entwickeln):
+Wenn du ohne Docker arbeiten möchtest (z.B. zum Entwickeln), laufen API und UI in zwei Terminals:
 
 ```bash
-# Virtuelle Umgebung aktivieren (falls noch nicht aktiv)
-source venv/bin/activate
-
-# Server starten
-cd backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Terminal 1: API starten
+cd zerowaste/chatbot
+python api.py
 ```
 
-Browser öffnen: **http://localhost:8000**
+```bash
+# Terminal 2: UI starten
+cd zerowaste/chatbot
+API_PORT=8000 python app.py
+```
 
-Der `--reload`-Flag startet den Server automatisch neu wenn du Code änderst – praktisch beim Entwickeln.
+Browser öffnen: **http://localhost:8501**
+
+Die API-Dokumentation findest du unter **http://localhost:8000/docs**.
 
 ---
 
@@ -235,7 +238,9 @@ docker compose logs -f
 docker compose down
 ```
 
-Browser öffnen: **http://localhost:8000**
+Browser öffnen: **http://localhost:8511**
+
+Die API-Dokumentation findest du unter **http://localhost:8001/docs**.
 
 Die SQLite-Datenbank wird im `data/`-Ordner gespeichert und bleibt auch nach Container-Neustarts erhalten.
 
@@ -247,7 +252,7 @@ Der Server stellt folgende REST-Endpunkte bereit:
 
 | Methode | Pfad | Funktion |
 |---|---|---|
-| `GET` | `/` | Web-Interface (Frontend) |
+| `GET` | `/` | API-Status |
 | `GET` | `/api/inventory` | Gesamte Vorratsliste abrufen |
 | `POST` | `/api/inventory/add` | Zutat hinzufügen |
 | `DELETE` | `/api/inventory/remove` | Zutat entfernen |
@@ -260,7 +265,7 @@ Der Server stellt folgende REST-Endpunkte bereit:
 | `GET` | `/api/stats` | Impact-Statistiken abrufen |
 
 Interaktive API-Dokumentation (automatisch von FastAPI generiert):
-**http://localhost:8000/docs**
+**http://localhost:8001/docs** bei Docker oder **http://localhost:8000/docs** ohne Docker.
 
 ---
 
