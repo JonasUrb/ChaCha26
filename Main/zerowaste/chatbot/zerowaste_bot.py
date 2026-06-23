@@ -173,6 +173,16 @@ class ZeroWasteAgent:
     mirroring the AnimalBot pattern of separating logic from transport.
     """
 
+    _DIET_RULES = {
+        "vegan": "no meat, fish, dairy, eggs, honey, or any animal-derived ingredients",
+        "vegetarian": "no meat or fish; dairy and eggs ARE allowed unless another preference says otherwise",
+        "pescatarian": "no meat, but fish and seafood are allowed",
+        "halal": "no pork, no alcohol, and only halal-slaughtered meat",
+        "kosher": "no pork or shellfish, and no mixing meat and dairy in the same dish",
+        "low-carb": "minimize high-carb foods (bread, pasta, rice, sugar, potatoes); meat, fish, eggs, dairy, and most vegetables ARE allowed and encouraged",
+        "keto": "very low carb, moderate protein, high fat; avoid sugar, grains, and most fruit; meat, fish, eggs, dairy, and fats ARE allowed",
+    }
+
     def __init__(self):
         self.client = OpenAI(
             api_key=API_KEY,
@@ -199,13 +209,23 @@ class ZeroWasteAgent:
         if not diet_preferences:
             return ""
         names = [d["name"] if isinstance(d, dict) else d for d in diet_preferences]
-        diet_list = ", ".join(names)
+
+        explained_lines = []
+        for name in names:
+            key = name.strip().lower()
+            if key in self._DIET_RULES:
+                explained_lines.append(f"  - {name}: {self._DIET_RULES[key]}")
+            else:
+                explained_lines.append(f"  - {name}: (use your best understanding of what this diet excludes)")
+        explained_text = "\n".join(explained_lines)
+
         return (
-            f"\n🥗 USER DIET PREFERENCE(S) — HARD CONSTRAINT, OVERRIDES EVERYTHING ELSE: {diet_list}\n"
-            "- This is non-negotiable. It overrides the user's wish, the pantry contents, and any other rule or instruction in this prompt — no exceptions.\n"
-            "- Treat any pantry ingredient that violates this diet (e.g. meat/fish/dairy/eggs/honey for vegan, meat/fish for vegetarian, pork/alcohol/non-halal meat for halal) as NOT AVAILABLE: do not use it, do not name it, do not build a recipe around it.\n"
-            "- If the user's wish or message literally names a non-compliant dish or ingredient (e.g. a vegan user asks 'what can I cook with minced meat'), do NOT follow that literally. Instead, reinterpret it as a request for the closest diet-compliant alternative (e.g. a plant-based ground-meat substitute, or a different dish that satisfies the same craving) and briefly note that you adapted it.\n"
-            "- Every single suggestion and recipe MUST fully comply with this diet preference. Re-check each one against this list before responding.\n"
+            f"\n🥗 USER DIET PREFERENCE(S) — HARD CONSTRAINT:\n{explained_text}\n"
+            "- Apply ONLY the rule(s) listed above, exactly as written. Do NOT invent extra restrictions and do NOT assume one diet implies another — "
+            "for example, low-carb or keto do NOT mean vegan or vegetarian, so meat, fish, eggs, and dairy stay fully allowed under those two unless a separate preference excludes them.\n"
+            "- This overrides the user's wish and the pantry contents, but ONLY for what is actually restricted above — every other pantry ingredient remains fully usable.\n"
+            "- If a pantry ingredient genuinely conflicts with one of the rules above, leave it out or suggest a compliant substitute instead of silently using it.\n"
+            "- If the user's wish literally names something that conflicts with a rule above, reinterpret it as the closest compliant alternative instead of following it literally.\n"
         )
 
     def _format_inventory(self, ingredients: list) -> str:
