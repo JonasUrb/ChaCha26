@@ -806,6 +806,21 @@ What would you like to cook today?`);
     return match ? `${match[3]}.${match[2]}.${match[1]}` : value;
   }
 
+  function formatChoiceRange(count) {
+    const choices = Array.from({ length: count }, (_, index) => String(index + 1));
+    if (choices.length <= 2) return choices.join(' or ');
+    return `${choices.slice(0, -1).join(', ')} or ${choices[choices.length - 1]}`;
+  }
+
+  function buildSuggestionIntro(suggestions) {
+    const count = suggestions.length;
+    if (count === 1) {
+      return 'I found **1 recipe idea** for your pantry!\n\nClick the card or type 1 to see the full recipe.';
+    }
+
+    return `I found **${count} recipe ideas** for your pantry!\n\nClick a card or type ${formatChoiceRange(count)} to see the full recipe.`;
+  }
+
   function createChatId() {
     return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
@@ -1474,8 +1489,9 @@ What would you like to cook today?`);
 
     if (pendingSuggestions) {
       const num = parseInt(text);
+      const maxSuggestion = pendingSuggestions.length;
 
-      if (num >= 1 && num <= 3) {
+      if (num >= 1 && num <= maxSuggestion) {
         addUserMessage(text);
         await selectRecipe(num - 1);
         return;
@@ -1498,7 +1514,7 @@ What would you like to cook today?`);
     const isIngredientUncertainty = isIngredientUncertaintyRequest(text);
 
     const isRecipeRequest =
-      /\b(recipe|cook|dish|hungry|meal|lunch|dinner|breakfast|quick|fast)\b|feel like|what can i cook|what should i cook|make a recipe/i.test(text);
+      /\b(recipes?|recipe ideas?|recipe suggestions?|cook|cooking|dish|dishes|hungry|meal|meals|lunch|dinner|breakfast|quick|fast)\b|feel like|what can i cook|what should i cook|what can i make|what should i make|make (me )?(a |some )?recipes?/i.test(text);
 
     try {
       if (isIngredientUncertainty) {
@@ -1566,7 +1582,7 @@ What would you like to cook today?`);
         if (data.suggestions && data.suggestions.length > 0) {
           pendingSuggestions = data.suggestions;
           addBotMessage(
-            'I found **3 recipe ideas** for your pantry!\n\nClick a card or type 1, 2 or 3 to see the full recipe.',
+            buildSuggestionIntro(data.suggestions),
             data.suggestions
           );
         } else {
